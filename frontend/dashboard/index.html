@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WapiGrow — لوحة التحكم</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --wa:#25D366;--wa2:#1aaa52;--wa-bg:rgba(37,211,102,0.08);
+  --bg:#f4f6f8;--white:#ffffff;
+  --text:#1a1a2e;--text2:#6b7280;--text3:#9ca3af;
+  --border:#e5e7eb;--border2:#f0f2f5;
+  --red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#8b5cf6;
+  --r:12px;--r-sm:8px;
+  --sidebar:60px;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Cairo',sans-serif;color:var(--text);display:flex;flex-direction:row-reverse}
+
+/* ===== RIGHT SIDEBAR ===== */
+#sidebar{
+  width:var(--sidebar);min-width:var(--sidebar);height:100vh;
+  background:var(--white);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;
+  padding:12px 0;gap:2px;z-index:100;flex-shrink:0;
+}
+.sb-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--wa),var(--wa2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:8px}
+.sb-divider{width:32px;height:1px;background:var(--border);margin:6px 0}
+.sb-btn{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;color:var(--text2);position:relative;background:none;border:none}
+.sb-btn:hover{background:var(--wa-bg);color:var(--wa)}
+.sb-btn.active{background:var(--wa-bg);color:var(--wa)}
+.sb-btn i{font-size:20px}
+.sb-badge{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;border-radius:10px;padding:1px 4px;font-size:9px;font-weight:700;min-width:16px;text-align:center;border:1.5px solid var(--white)}
+.sb-spacer{flex:1}
+.sb-tooltip{position:absolute;right:calc(var(--sidebar) + 6px);top:50%;transform:translateY(-50%);background:#1a1a2e;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:200}
+.sb-btn:hover .sb-tooltip{opacity:1}
+
+/* ===== MAIN SCROLL AREA ===== */
+#main{flex:1;overflow-y:auto;padding:24px 28px 40px;background:var(--bg)}
+#main::-webkit-scrollbar{width:5px}
+#main::-webkit-scrollbar-track{background:transparent}
+#main::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
+
+/* ===== PAGE SECTIONS ===== */
+.page{display:none}
+.page.active{display:block;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== TOP PAGE HEADER ===== */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.page-title{font-size:20px;font-weight:700;color:var(--text)}
+.page-sub{font-size:13px;color:var(--text2);margin-top:2px}
+
+/* ===== CARDS ===== */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.card-sm{padding:16px}
+
+/* ===== KPI ROW ===== */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.kpi-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.kpi-label{font-size:12px;color:var(--text2);font-weight:500;line-height:1.4}
+.kpi-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(37,211,102,0.1);color:#059669}
+.badge-blue{background:rgba(59,130,246,0.1);color:var(--blue)}
+.badge-amber{background:rgba(245,158,11,0.1);color:var(--amber)}
+.badge-red{background:rgba(239,68,68,0.1);color:var(--red)}
+.badge-gray{background:#f3f4f6;color:var(--text2)}
+.kpi-value{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-0.5px}
+.kpi-value.green{color:#059669}
+.kpi-sub{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.kpi-delta{font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:2px}
+.delta-up{color:#059669}.delta-down{color:var(--red)}
+
+/* Sparkline SVG */
+.sparkline{display:block}
+
+/* ===== SECTION HEADER ===== */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.sec-title{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px}
+.sec-title i{color:var(--wa);font-size:17px}
+
+/* ===== TIME TABS ===== */
+.time-tabs{display:flex;gap:2px;background:#f3f4f6;border-radius:8px;padding:3px}
+.time-tab{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;color:var(--text2);border:none;background:none;font-family:'Cairo',sans-serif;white-space:nowrap}
+.time-tab.active{background:var(--white);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* ===== TABLE ===== */
+.table-wrap{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--white)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:11px 14px;text-align:right;font-size:11px;font-weight:600;color:var(--text2);background:#f9fafb;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle}
+.dot-green{background:#10b981}.dot-gray{background:#9ca3af}.dot-amber{background:var(--amber)}
+
+/* ===== MARKETING REVENUE SECTION ===== */
+.mkt-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px}
+.mkt-stat{text-align:center;padding:18px;background:var(--white);border:1px solid var(--border);border-radius:var(--r)}
+.mkt-stat-val{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-0.5px}
+.mkt-stat-lbl{font-size:12px;color:var(--text2);margin-top:4px}
+
+/* Horizontal bar chart */
+.h-bar-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
+.h-bar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.h-bar-track{height:32px;background:#f3f4f6;border-radius:6px;overflow:hidden;position:relative}
+.h-bar-fill{height:100%;background:linear-gradient(90deg,var(--wa2),var(--wa));border-radius:6px;transition:width .8s ease;display:flex;align-items:center;justify-content:flex-end;padding-left:12px}
+.h-bar-label{font-size:13px;font-weight:700;color:#fff;padding-left:10px;white-space:nowrap}
+.h-bar-periods{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.h-bar-row{display:flex;align-items:center;gap:10px}
+.h-bar-row-lbl{font-size:12px;color:var(--text2);min-width:80px;text-align:right}
+.h-bar-row-track{flex:1;height:14px;background:#f3f4f6;border-radius:4px;overflow:hidden}
+.h-bar-row-fill{height:100%;border-radius:4px;transition:width 1s ease}
+.h-bar-row-val{font-size:12px;font-weight:600;min-width:60px;text-align:left}
+
+/* Funnel / Welcome series */
+.funnel-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.funnel-stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
+.funnel-val{font-size:22px;font-weight:800;color:var(--text)}
+.funnel-lbl{font-size:11px;color:var(--text2);margin-top:4px}
+
+/* ===== BUTTONS ===== */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .18s;border:none}
+.btn-primary{background:var(--wa);color:#fff}
+.btn-primary:hover{background:var(--wa2)}
+.btn-secondary{background:var(--white);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{background:#f9fafb;color:var(--text)}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* ===== TOAST ===== */
+#toasts{position:fixed;bottom:24px;left:80px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+.toast{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);animation:toastIn .25s ease}
+@keyframes toastIn{from{transform:translateX(-40px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Inline chart mini */
+.mini-chart-wrap{display:flex;align-items:flex-end;gap:2px;height:36px}
+.mini-bar{width:4px;border-radius:2px 2px 0 0;background:var(--wa);opacity:.7}
+
+/* status number card within table */
+.num-cell{font-weight:700;font-size:14px;color:var(--text)}
+
+/* ===== INBOX SECTION ===== */
+.inbox-layout{display:grid;grid-template-columns:300px 1fr;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;height:calc(100vh - 120px);background:var(--white)}
+.inbox-list{border-left:1px solid var(--border);overflow-y:auto}
+.inbox-list::-webkit-scrollbar{width:3px}
+.inbox-list::-webkit-scrollbar-thumb{background:#e5e7eb}
+.inbox-search{padding:12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--white);z-index:2}
+.inbox-search input{width:100%;background:#f9fafb;border:1px solid var(--border);border-radius:8px;padding:7px 32px 7px 10px;font-size:12px;font-family:'Cairo',sans-serif;outline:none;color:var(--text)}
+.inbox-search .si{position:absolute;right:22px;top:22px;color:var(--text3);font-size:15px}
+.chat-item{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .15s}
+.chat-item:hover,.chat-item.sel{background:#f0fdf4}
+.chat-av{width:38px;height:38px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0369a1;flex-shrink:0}
+.chat-info{flex:1;min-width:0}
+.chat-name-row{display:flex;justify-content:space-between;align-items:center}
+.chat-name{font-size:13px;font-weight:600;color:var(--text)}
+.chat-time{font-size:10px;color:var(--text3)}
+.chat-prev{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.chat-unread{width:18px;height:18px;border-radius:50%;background:var(--wa);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.chat-main{display:flex;flex-direction:column}
+.chat-topbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:#f0fdf4}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:#bbf7d0}
+.msg{max-width:68%;padding:9px 13px;border-radius:10px;font-size:13px;line-height:1.55}
+.msg-in{background:var(--white);border:1px solid var(--border);align-self:flex-end;border-radius:4px 10px 10px 10px}
+.msg-out{background:#dcfce7;border:1px solid #bbf7d0;align-self:flex-start;border-radius:10px 4px 10px 10px}
+.msg-time{font-size:10px;color:var(--text3);margin-top:3px;text-align:left}
+.chat-input-row{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center}
+.chat-input-row input{flex:1;background:#f9fafb;border:1px solid var(--border);border-radius:22px;padding:8px 14px;font-size:13px;font-family:'Cairo',sans-serif;outline:none;color:var(--text);direction:rtl}
+.chat-input-row input:focus{border-color:var(--wa)}
+.send-btn{width:34px;height:34px;border-radius:50%;background:var(--wa);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn i{color:#fff;font-size:15px}
+
+/* contacts */
+.contacts-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start}
+.contact-detail{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.contact-detail-hd{padding:18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.contact-av-lg{width:48px;height:48px;border-radius:50%;background:var(--wa-bg);border:2px solid rgba(37,211,102,.3);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--wa)}
+.detail-row{padding:11px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border2);font-size:12px}
+.detail-row:last-child{border:none}
+.detail-key{color:var(--text2)}.detail-val{font-weight:600;color:var(--text)}
+
+/* automations */
+.auto-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.auto-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .2s}
+.auto-card:hover{border-color:var(--wa);box-shadow:0 2px 12px rgba(37,211,102,.12)}
+.auto-card-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.toggle{width:34px;height:19px;border-radius:10px;background:#e5e7eb;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--wa)}
+.toggle::after{content:'';position:absolute;width:13px;height:13px;border-radius:50%;background:#fff;top:3px;right:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(-15px)}
+.auto-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border2)}
+.auto-stat-val{font-size:15px;font-weight:700;color:var(--text)}
+.auto-stat-lbl{font-size:10px;color:var(--text3);margin-top:1px}
+
+/* reports */
+.report-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+
+/* settings */
+.settings-nav{display:flex;gap:2px;background:#f3f4f6;border-radius:8px;padding:3px;margin-bottom:20px;width:fit-content}
+.s-tab{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;color:var(--text2);border:none;background:none;font-family:'Cairo',sans-serif}
+.s-tab.active{background:var(--white);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.form-group{margin-bottom:15px}
+.form-label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;display:block}
+.form-input{width:100%;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);font-family:'Cairo',sans-serif;outline:none;transition:border-color .18s}
+.form-input:focus{border-color:var(--wa)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border2)}
+.toggle-row:last-child{border:none}
+</style>
+</head>
+<body>
+
+<!-- RIGHT SIDEBAR -->
+<aside id="sidebar">
+  <div class="sb-avatar">أح</div>
+  <div class="sb-divider"></div>
+
+  <button class="sb-btn active" onclick="nav('dashboard',this)" title="لوحة التحكم">
+    <i class="ti ti-dashboard"></i>
+    <span class="sb-tooltip">لوحة التحكم</span>
+  </button>
+  <button class="sb-btn" onclick="nav('inbox',this)" title="الرسائل">
+    <i class="ti ti-messages"></i>
+    <span class="sb-badge">99+</span>
+    <span class="sb-tooltip">الرسائل</span>
+  </button>
+  <button class="sb-btn" onclick="nav('campaigns',this)" title="الحملات">
+    <i class="ti ti-speakerphone"></i>
+    <span class="sb-tooltip">الحملات</span>
+  </button>
+  <button class="sb-btn" onclick="nav('automations',this)" title="الأتمتة التسويقية">
+    <i class="ti ti-git-branch"></i>
+    <span class="sb-tooltip">الأتمتة التسويقية</span>
+  </button>
+  <button class="sb-btn" onclick="nav('chatbot',this)" title="الشات بوت">
+    <i class="ti ti-robot"></i>
+    <span class="sb-tooltip">الشات بوت</span>
+  </button>
+  <button class="sb-btn" onclick="nav('contacts',this)" title="جهات الاتصال">
+    <i class="ti ti-users"></i>
+    <span class="sb-tooltip">جهات الاتصال</span>
+  </button>
+  <button class="sb-btn" onclick="nav('reports',this)" title="التقارير">
+    <i class="ti ti-chart-line"></i>
+    <span class="sb-tooltip">التقارير</span>
+  </button>
+
+  <div class="sb-spacer"></div>
+
+  <button class="sb-btn" onclick="nav('settings',this)" title="الإعدادات">
+    <i class="ti ti-settings"></i>
+    <span class="sb-tooltip">الإعدادات</span>
+  </button>
+  <button class="sb-btn" title="متجر التطبيقات">
+    <i class="ti ti-layout-grid"></i>
+    <span class="sb-tooltip">متجر التطبيقات</span>
+  </button>
+  <button class="sb-btn" title="المساعدة" onclick="showToast('سيتم فتح المساعدة...')">
+    <i class="ti ti-help-circle"></i>
+    <span class="sb-tooltip">المساعدة</span>
+  </button>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+
+  <!-- ===== DASHBOARD ===== -->
+  <div class="page active" id="pg-dashboard">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">لوحة التحكم</div>
+        <div class="page-sub">مرحباً بك — هذا ملخص أداء حسابك</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary"><i class="ti ti-calendar"></i> هذا الشهر</button>
+        <button class="btn btn-primary" onclick="showToast('تم تحديث البيانات')"><i class="ti ti-refresh"></i> تحديث</button>
+      </div>
+    </div>
+
+    <!-- 1. KPI ROW -->
+    <div class="kpi-row">
+
+      <!-- Account Status -->
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-label">حالة الحساب</div>
+          <span class="kpi-badge badge-green"><span class="dot dot-green" style="margin:0 0 0 4px"></span> مدفوع</span>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:var(--text)">BusinessChat اشتراك</div>
+        <div class="kpi-sub"><i class="ti ti-calendar" style="font-size:13px"></i> الفاتورة القادمة: 23 أبريل 2027</div>
+        <svg class="sparkline" width="100%" height="36" viewBox="0 0 140 36" preserveAspectRatio="none">
+          <polyline points="0,28 20,24 40,20 60,22 80,14 100,10 120,8 140,6" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="0,28 20,24 40,20 60,22 80,14 100,10 120,8 140,6 140,36 0,36" fill="rgba(16,185,129,0.08)" stroke="none"/>
+        </svg>
+      </div>
+
+      <!-- Campaign Revenue -->
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-label">إيرادات الحملات</div>
+          <span class="kpi-badge badge-gray">هذا الشهر</span>
+        </div>
+        <div class="kpi-value">SAR 0</div>
+        <div class="kpi-sub" style="gap:6px">
+          مقارنة بالشهر الماضي
+          <span class="kpi-delta delta-up"><i class="ti ti-arrow-left" style="font-size:10px"></i> 0</span>
+        </div>
+        <svg class="sparkline" width="100%" height="36" viewBox="0 0 140 36" preserveAspectRatio="none">
+          <polyline points="0,32 30,32 60,30 90,30 120,28 140,28" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"/>
+          <polyline points="0,32 30,32 60,30 90,30 120,28 140,28 140,36 0,36" fill="rgba(209,213,219,0.1)" stroke="none"/>
+        </svg>
+      </div>
+
+      <!-- Automation Revenue -->
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-label">إيرادات الأتمتة</div>
+          <span class="kpi-badge badge-green"><i class="ti ti-trending-up" style="font-size:11px"></i> +18.34%</span>
+        </div>
+        <div class="kpi-value green">SAR 55.8K</div>
+        <div class="kpi-sub">
+          مقارنة بالشهر الماضي
+          <span class="kpi-delta delta-up" style="margin-right:4px"><i class="ti ti-trending-up" style="font-size:10px"></i> +18.34%</span>
+        </div>
+        <svg class="sparkline" width="100%" height="36" viewBox="0 0 140 36" preserveAspectRatio="none">
+          <polyline points="0,30 18,26 36,24 54,20 72,16 90,12 108,9 126,6 140,4" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="0,30 18,26 36,24 54,20 72,16 90,12 108,9 126,6 140,4 140,36 0,36" fill="rgba(16,185,129,0.1)" stroke="none"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 2. WHATSAPP NUMBERS TABLE -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="sec-header">
+        <div class="sec-title"><i class="ti ti-brand-whatsapp"></i> أرقام الواتساب</div>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('إضافة رقم جديد...')"><i class="ti ti-plus"></i> إضافة رقم</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>رقم الواتساب</th>
+              <th>الحالة</th>
+              <th>تقييم الجودة</th>
+              <th>الحد الأقصى للرسائل</th>
+              <th>الإسم</th>
+              <th>مزود الخدمة</th>
+              <th>البلد</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:700;font-family:monospace;font-size:13px;letter-spacing:.3px">966509559535</td>
+              <td><span class="kpi-badge badge-green"><span class="dot dot-green" style="margin:0 0 0 4px"></span> متصل</span></td>
+              <td><span class="kpi-badge badge-green"><span class="dot dot-green" style="margin:0 0 0 4px"></span> مرتفع</span></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span class="num-cell">100,000</span>
+                  <i class="ti ti-trending-up" style="color:#10b981;font-size:14px"></i>
+                </div>
+              </td>
+              <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">شركة مدرار لبيع قطع غيار السيارات</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <div style="width:20px;height:20px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center"><i class="ti ti-brand-whatsapp" style="color:#fff;font-size:11px"></i></div>
+                  <span>WhatsApp</span>
+                </div>
+              </td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:18px">🇸🇦</span> المملكة العربية السعودية
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;font-family:monospace;font-size:13px;letter-spacing:.3px">966512345678</td>
+              <td><span class="kpi-badge badge-green"><span class="dot dot-green" style="margin:0 0 0 4px"></span> متصل</span></td>
+              <td><span class="kpi-badge badge-amber"><span class="dot dot-amber" style="margin:0 0 0 4px"></span> متوسط</span></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span class="num-cell">50,000</span>
+                  <i class="ti ti-minus" style="color:var(--text3);font-size:13px"></i>
+                </div>
+              </td>
+              <td>متجر الإلكترونيات الحديثة</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <div style="width:20px;height:20px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center"><i class="ti ti-brand-whatsapp" style="color:#fff;font-size:11px"></i></div>
+                  <span>WhatsApp</span>
+                </div>
+              </td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:18px">🇸🇦</span> المملكة العربية السعودية
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. MARKETING REVENUE SECTION -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="sec-header">
+        <div class="sec-title"><i class="ti ti-chart-bar"></i> إيرادات التسويق</div>
+        <div class="time-tabs">
+          <button class="time-tab active" onclick="setTimeTab(this,'all')">منذ البدء</button>
+          <button class="time-tab" onclick="setTimeTab(this,'12m')">12 شهرًا</button>
+          <button class="time-tab" onclick="setTimeTab(this,'30d')">30 يومًا</button>
+          <button class="time-tab" onclick="setTimeTab(this,'7d')">7 أيام</button>
+          <button class="time-tab" onclick="setTimeTab(this,'24h')">24 ساعة</button>
+        </div>
+      </div>
+
+      <div class="mkt-stats">
+        <div class="mkt-stat">
+          <div class="mkt-stat-val" id="mkt-total">395.8K</div>
+          <div class="mkt-stat-lbl">إجمالي الإيرادات (SAR)</div>
+        </div>
+        <div class="mkt-stat">
+          <div class="mkt-stat-val" id="mkt-orders">752</div>
+          <div class="mkt-stat-lbl">الطلبات المنسوبة</div>
+        </div>
+        <div class="mkt-stat">
+          <div class="mkt-stat-val" id="mkt-avg">526</div>
+          <div class="mkt-stat-lbl">معدّل قيمة الطلب (SAR)</div>
+        </div>
+      </div>
+
+      <!-- Horizontal bar chart -->
+      <div class="h-bar-wrap">
+        <div class="h-bar-header">
+          <span style="font-size:12px;color:var(--text2)" id="bar-period-lbl">منذ البدء</span>
+          <span style="font-size:14px;font-weight:700;color:var(--text)" id="bar-total-lbl">SAR 395,800</span>
+        </div>
+        <div class="h-bar-track">
+          <div class="h-bar-fill" id="main-bar" style="width:100%">
+            <span class="h-bar-label" id="main-bar-lbl">395.8K</span>
+          </div>
+        </div>
+        <div class="h-bar-periods" id="sub-bars" style="margin-top:14px">
+          <div class="h-bar-row">
+            <span class="h-bar-row-lbl">الأتمتة</span>
+            <div class="h-bar-row-track"><div class="h-bar-row-fill" style="width:85%;background:var(--wa);opacity:.7"></div></div>
+            <span class="h-bar-row-val" style="color:#059669">SAR 336K</span>
+          </div>
+          <div class="h-bar-row">
+            <span class="h-bar-row-lbl">الحملات</span>
+            <div class="h-bar-row-track"><div class="h-bar-row-fill" style="width:15%;background:var(--blue);opacity:.7"></div></div>
+            <span class="h-bar-row-val" style="color:var(--blue)">SAR 59.8K</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. REVENUE BY AUTOMATION TABLE -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="sec-header">
+        <div class="sec-title"><i class="ti ti-bolt"></i> الإيرادات (SAR) — حسب الأتمتة</div>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('جاري التصدير...')"><i class="ti ti-download"></i> تصدير</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>الأتمتة</th>
+              <th>الإيرادات آخر 30 يومًا</th>
+              <th>الإيرادات ال30 يوماً السابقة</th>
+              <th>الإيرادات منذ البدء</th>
+              <th>الحالة</th>
+              <th>الطلبات آخر 30 يومًا</th>
+            </tr>
+          </thead>
+          <tbody id="auto-revenue-tbody">
+            <tr>
+              <td style="font-weight:600;color:var(--text)">🛒 السلات المتروكة</td>
+              <td class="num-cell">23,932.20</td>
+              <td style="color:var(--text2)">22,539.23</td>
+              <td class="num-cell" style="color:#059669">167,253.96</td>
+              <td><span class="kpi-badge badge-green">نشط</span></td>
+              <td class="num-cell">43</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;color:var(--text)">👋 سلسلة الترحيب بالعملاء</td>
+              <td class="num-cell">8,024.11</td>
+              <td style="color:var(--text2)">5,409.93</td>
+              <td class="num-cell" style="color:#059669">97,597.94</td>
+              <td><span class="kpi-badge badge-green">نشط</span></td>
+              <td class="num-cell">7</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;color:var(--text)">🔄 إعادة الاستهداف بعد الشراء</td>
+              <td class="num-cell">447.94</td>
+              <td style="color:var(--text2)">2,566.74</td>
+              <td class="num-cell" style="color:#059669">5,323.91</td>
+              <td><span class="kpi-badge badge-green">نشط</span></td>
+              <td class="num-cell">2</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;color:var(--text)">👁 ترك تصفُّح المتجر</td>
+              <td class="num-cell">22,805.44</td>
+              <td style="color:var(--text2)">16,530.86</td>
+              <td class="num-cell" style="color:#059669">119,235.96</td>
+              <td><span class="kpi-badge badge-green">نشط</span></td>
+              <td class="num-cell">35</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;color:var(--text)">💙 إسترداد العملاء</td>
+              <td class="num-cell">540.52</td>
+              <td style="color:var(--text2)">65.01</td>
+              <td class="num-cell" style="color:#059669">4,669.95</td>
+              <td><span class="kpi-badge badge-green">نشط</span></td>
+              <td class="num-cell">1</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;color:var(--text)">📢 الحملات التسويقيّة</td>
+              <td class="num-cell">0.00</td>
+              <td style="color:var(--text2)">0.00</td>
+              <td class="num-cell" style="color:#059669">1,737.17</td>
+              <td><span class="kpi-badge badge-amber">1 ذات إيرادات</span></td>
+              <td class="num-cell">0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 5. WELCOME SERIES FUNNEL -->
+    <div class="card">
+      <div class="sec-header">
+        <div class="sec-title"><i class="ti ti-filter"></i> نافذة سلسلة الترحيب بالعملاء (منذ البدء)</div>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('فتح تفاصيل الأتمتة...')"><i class="ti ti-external-link"></i> عرض التفاصيل</button>
+      </div>
+      <div class="funnel-stats">
+        <div class="funnel-stat">
+          <div class="funnel-val" style="color:#059669">276</div>
+          <div class="funnel-lbl">إيرادات (SAR)</div>
+          <div style="height:3px;background:#f3f4f6;border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:30%;background:#10b981;border-radius:2px"></div></div>
+        </div>
+        <div class="funnel-stat">
+          <div class="funnel-val" style="color:#3b82f6">12.9K</div>
+          <div class="funnel-lbl">العملاء الجدد</div>
+          <div style="height:3px;background:#f3f4f6;border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:75%;background:#3b82f6;border-radius:2px"></div></div>
+        </div>
+        <div class="funnel-stat">
+          <div class="funnel-val">559.9K</div>
+          <div class="funnel-lbl">إجمالي المشاهدات</div>
+          <div style="height:3px;background:#f3f4f6;border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:100%;background:#8b5cf6;border-radius:2px"></div></div>
+        </div>
+        <div class="funnel-stat">
+          <div class="funnel-val" style="color:#f59e0b">2%</div>
+          <div class="funnel-lbl">معدل التحويل</div>
+          <div style="height:3px;background:#f3f4f6;border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:20%;background:#f59e0b;border-radius:2px"></div></div>
+        </div>
+      </div>
+
+      <!-- Mini funnel visual -->
+      <div style="margin-top:18px;padding:16px;background:#f9fafb;border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;font-weight:600">مسار التحويل</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:var(--text2);min-width:100px;text-align:right">المشاهدات الكاملة</span>
+            <div style="flex:1;height:22px;background:#e0f2fe;border-radius:4px;overflow:hidden"><div style="height:100%;width:100%;background:#3b82f6;border-radius:4px;display:flex;align-items:center;justify-content:flex-start;padding:0 8px"><span style="font-size:11px;font-weight:700;color:#fff">559,900</span></div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:var(--text2);min-width:100px;text-align:right">العملاء الجدد</span>
+            <div style="flex:1;height:22px;background:#dcfce7;border-radius:4px;overflow:hidden"><div style="height:100%;width:2.3%;background:#10b981;border-radius:4px;min-width:70px;display:flex;align-items:center;justify-content:flex-start;padding:0 8px"><span style="font-size:11px;font-weight:700;color:#fff">12,900</span></div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:var(--text2);min-width:100px;text-align:right">الإيرادات</span>
+            <div style="flex:1;height:22px;background:#fef3c7;border-radius:4px;overflow:hidden"><div style="height:100%;width:0.05%;background:#f59e0b;border-radius:4px;min-width:50px;display:flex;align-items:center;justify-content:flex-start;padding:0 8px"><span style="font-size:11px;font-weight:700;color:#fff">SAR 276</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+
+  <!-- ===== INBOX ===== -->
+  <div class="page" id="pg-inbox">
+    <div class="page-header">
+      <div><div class="page-title">صندوق الرسائل</div><div class="page-sub">12 محادثة مفتوحة — 4 وكلاء متاحون</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary"><i class="ti ti-filter"></i> تصفية</button>
+        <button class="btn btn-primary" onclick="showToast('تم إنشاء محادثة جديدة')"><i class="ti ti-plus"></i> محادثة جديدة</button>
+      </div>
+    </div>
+    <div class="inbox-layout">
+      <div class="inbox-list">
+        <div class="inbox-search" style="position:relative">
+          <input type="text" placeholder="بحث في المحادثات..." style="padding-right:32px">
+          <i class="ti ti-search si"></i>
+        </div>
+        <div class="chat-item sel" onclick="pickChat(this,'سارة أحمد','SA','أريد التحقق من حالة طلبي من فضلك')">
+          <div class="chat-av">SA</div>
+          <div class="chat-info"><div class="chat-name-row"><span class="chat-name">سارة أحمد</span><span class="chat-time">2د</span></div><div class="chat-prev">أريد التحقق من حالة طلبي</div></div>
+          <div class="chat-unread">3</div>
+        </div>
+        <div class="chat-item" onclick="pickChat(this,'محمد كريم','مك','هل المنتج متوفر بالمقاس XL؟')">
+          <div class="chat-av" style="background:#fce7f3;color:#be185d">مك</div>
+          <div class="chat-info"><div class="chat-name-row"><span class="chat-name">محمد كريم</span><span class="chat-time">8د</span></div><div class="chat-prev">هل المنتج متوفر بالمقاس XL؟</div></div>
+          <div class="chat-unread">1</div>
+        </div>
+        <div class="chat-item" onclick="pickChat(this,'ليلى نور','لن','وصل الطلب، شكراً جزيلاً! 🙏')">
+          <div class="chat-av" style="background:#f0fdf4;color:#166534">لن</div>
+          <div class="chat-info"><div class="chat-name-row"><span class="chat-name">ليلى نور</span><span class="chat-time">14د</span></div><div class="chat-prev">وصل الطلب، شكراً جزيلاً! 🙏</div></div>
+        </div>
+        <div class="chat-item" onclick="pickChat(this,'عمرو رضوان','عر','هل يمكنني إرجاع هذا المنتج؟')">
+          <div class="chat-av" style="background:#eff6ff;color:#1d4ed8">عر</div>
+          <div class="chat-info"><div class="chat-name-row"><span class="chat-name">عمرو رضوان</span><span class="chat-time">22د</span></div><div class="chat-prev">هل يمكنني إرجاع هذا المنتج؟</div></div>
+          <div class="chat-unread">2</div>
+        </div>
+        <div class="chat-item" onclick="pickChat(this,'هناء فاروق','هف','نعم، استخدمت كود الخصم بالفعل')">
+          <div class="chat-av" style="background:#fefce8;color:#854d0e">هف</div>
+          <div class="chat-info"><div class="chat-name-row"><span class="chat-name">هناء فاروق</span><span class="chat-time">45د</span></div><div class="chat-prev">نعم، استخدمت كود الخصم بالفعل</div></div>
+        </div>
+        <div class="chat-item" onclick="pickChat(this,'أحمد سالم','أس','متى ينتهي العرض؟')">
+          <div class="chat-av" style="background:#f5f3ff;color:#6d28d9">أس</div>
+          <div class="chat-info"><div class="chat-name-row"><span class="chat-name">أحمد سالم</span><span class="chat-time">1س</span></div><div class="chat-prev">متى ينتهي العرض؟</div></div>
+        </div>
+      </div>
+      <div class="chat-main">
+        <div class="chat-topbar">
+          <div class="chat-av" id="ch-av" style="background:#e0f2fe;color:#0369a1">SA</div>
+          <div><div style="font-size:14px;font-weight:600" id="ch-name">سارة أحمد</div><div style="font-size:12px;color:#10b981">● متصلة الآن</div></div>
+          <div style="margin-right:auto;display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm"><i class="ti ti-tag"></i> تصنيف</button>
+            <button class="btn btn-secondary btn-sm"><i class="ti ti-user-share"></i> تحويل</button>
+            <button class="btn btn-primary btn-sm" onclick="showToast('تم إغلاق المحادثة')"><i class="ti ti-check"></i> إغلاق</button>
+          </div>
+        </div>
+        <div class="chat-msgs" id="ch-msgs">
+          <div style="text-align:center;font-size:11px;color:#6b7280;margin:4px 0;padding:6px 12px;background:rgba(255,255,255,.6);border-radius:20px;width:fit-content;margin:0 auto">اليوم، 2:14 م</div>
+          <div class="msg msg-in">أريد التحقق من حالة طلبي من فضلك (رقم الطلب #4521)<div class="msg-time">2:14 م</div></div>
+          <div class="msg msg-out">مرحباً سارة! 👋 سأتحقق من ذلك الآن، لحظة من فضلك.<div class="msg-time">2:15 م ✓✓</div></div>
+          <div class="msg msg-out">طلبك #4521 تم شحنه! ومن المتوقع وصوله غداً بين 10 ص و2 م. سأرسل لك رابط التتبع الآن 📦<div class="msg-time">2:16 م ✓✓</div></div>
+          <div class="msg msg-in">رائع، شكراً جزيلاً! 😊<div class="msg-time">2:16 م</div></div>
+        </div>
+        <div style="padding:8px 14px;background:#f9fafb;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="insertQ('طلبك في الطريق! 📦')">تحديث الطلب</button>
+          <button class="btn btn-secondary btn-sm" onclick="insertQ('شكراً لتواصلك معنا 😊')">شكر</button>
+          <button class="btn btn-secondary btn-sm" onclick="insertQ('سياسة الإرجاع تتيح الإرجاع خلال 14 يوماً')">سياسة الإرجاع</button>
+        </div>
+        <div class="chat-input-row">
+          <button class="btn btn-secondary btn-sm" style="padding:8px"><i class="ti ti-paperclip"></i></button>
+          <input id="ch-input" type="text" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendChatMsg()">
+          <button class="send-btn" onclick="sendChatMsg()"><i class="ti ti-send"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CAMPAIGNS ===== -->
+  <div class="page" id="pg-campaigns">
+    <div class="page-header">
+      <div><div class="page-title">الحملات</div><div class="page-sub">إدارة وإرسال حملات واتساب التسويقية</div></div>
+      <button class="btn btn-primary" onclick="showToast('فتح منشئ الحملة...')"><i class="ti ti-plus"></i> حملة جديدة</button>
+    </div>
+    <div class="kpi-row" style="margin-bottom:20px">
+      <div class="kpi-card"><div class="kpi-label">إجمالي الحملات</div><div class="kpi-value">18</div><div class="kpi-sub up">4 نشطة حالياً</div></div>
+      <div class="kpi-card"><div class="kpi-label">معدل القراءة</div><div class="kpi-value green">97.1%</div><div class="kpi-sub"><span class="kpi-delta delta-up"><i class="ti ti-trending-up" style="font-size:10px"></i> +2.4%</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">الإيرادات الإجمالية</div><div class="kpi-value">SAR 59.8K</div><div class="kpi-sub"><span class="kpi-delta delta-up"><i class="ti ti-trending-up" style="font-size:10px"></i> +12%</span></div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الحملة</th><th>الحالة</th><th>المُرسَل</th><th>معدل القراءة</th><th>النقرات</th><th>الإيرادات</th><th>الإجراء</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600">🎉 تخفيضات العيد</td><td><span class="kpi-badge badge-green">نشطة</span></td><td>4,200</td><td style="color:#059669;font-weight:700">96.2%</td><td>1,240</td><td style="color:#059669;font-weight:700">SAR 8,840</td><td><button class="btn btn-secondary btn-sm" onclick="showToast('تقرير الحملة')"><i class="ti ti-chart-bar"></i></button></td></tr>
+          <tr><td style="font-weight:600">👕 تشكيلة جديدة</td><td><span class="kpi-badge badge-amber">مجدولة</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td><button class="btn btn-secondary btn-sm" onclick="showToast('تعديل الحملة')"><i class="ti ti-edit"></i></button></td></tr>
+          <tr><td style="font-weight:600">⚡ تخفيض 24 ساعة</td><td><span class="kpi-badge badge-gray">منتهية</span></td><td>6,100</td><td style="color:#059669;font-weight:700">97.8%</td><td>2,810</td><td style="color:#059669;font-weight:700">SAR 11,280</td><td><button class="btn btn-secondary btn-sm" onclick="showToast('تقرير الحملة')"><i class="ti ti-chart-bar"></i></button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== AUTOMATIONS ===== -->
+  <div class="page" id="pg-automations">
+    <div class="page-header">
+      <div><div class="page-title">الأتمتة التسويقية</div><div class="page-sub">تدار 24/7 — اضبطها مرة واحدة واجنِ الأرباح</div></div>
+      <button class="btn btn-primary" onclick="showToast('فتح منشئ الأتمتة...')"><i class="ti ti-plus"></i> أتمتة جديدة</button>
+    </div>
+    <div class="auto-cards">
+      <div class="auto-card">
+        <div class="auto-card-hd"><div><span class="kpi-badge badge-red" style="margin-bottom:6px">🛒 استرداد</span><div style="font-weight:700;font-size:14px">السلات المتروكة</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div style="font-size:12px;color:var(--text2)">رسائل تذكيرية تلقائية بعد ترك السلة</div>
+        <div class="auto-stats"><div><div class="auto-stat-val" style="color:#059669">18.4%</div><div class="auto-stat-lbl">معدل الاسترداد</div></div><div><div class="auto-stat-val">SAR 23.9K</div><div class="auto-stat-lbl">إيرادات 30 يوم</div></div></div>
+      </div>
+      <div class="auto-card">
+        <div class="auto-card-hd"><div><span class="kpi-badge badge-green" style="margin-bottom:6px">👋 ترحيب</span><div style="font-weight:700;font-size:14px">سلسلة الترحيب</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div style="font-size:12px;color:var(--text2)">مرحبا بالعملاء الجدد تلقائياً مع عرض خاص</div>
+        <div class="auto-stats"><div><div class="auto-stat-val" style="color:#059669">35%</div><div class="auto-stat-lbl">معدل الاشتراك</div></div><div><div class="auto-stat-val">SAR 8K</div><div class="auto-stat-lbl">إيرادات 30 يوم</div></div></div>
+      </div>
+      <div class="auto-card">
+        <div class="auto-card-hd"><div><span class="kpi-badge badge-blue" style="margin-bottom:6px">👁 تصفح</span><div style="font-weight:700;font-size:14px">ترك تصفُّح المتجر</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div style="font-size:12px;color:var(--text2)">استهداف زوار تركوا صفحات المنتجات</div>
+        <div class="auto-stats"><div><div class="auto-stat-val" style="color:#059669">12.2%</div><div class="auto-stat-lbl">معدل التحويل</div></div><div><div class="auto-stat-val">SAR 22.8K</div><div class="auto-stat-lbl">إيرادات 30 يوم</div></div></div>
+      </div>
+      <div class="auto-card">
+        <div class="auto-card-hd"><div><span class="kpi-badge badge-amber" style="margin-bottom:6px">🔄 متابعة</span><div style="font-weight:700;font-size:14px">إعادة الاستهداف بعد الشراء</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div style="font-size:12px;color:var(--text2)">عروض منتجات مكملة بعد الشراء</div>
+        <div class="auto-stats"><div><div class="auto-stat-val" style="color:#059669">8.7%</div><div class="auto-stat-lbl">معدل البيع الإضافي</div></div><div><div class="auto-stat-val">SAR 447</div><div class="auto-stat-lbl">إيرادات 30 يوم</div></div></div>
+      </div>
+      <div class="auto-card">
+        <div class="auto-card-hd"><div><span class="kpi-badge" style="background:#f5f3ff;color:#7c3aed;margin-bottom:6px">💙 استرداد</span><div style="font-weight:700;font-size:14px">إسترداد العملاء</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div style="font-size:12px;color:var(--text2)">إعادة تفعيل العملاء غير النشطين منذ 30+ يوم</div>
+        <div class="auto-stats"><div><div class="auto-stat-val" style="color:#059669">12%</div><div class="auto-stat-lbl">معدل الاسترداد</div></div><div><div class="auto-stat-val">SAR 540</div><div class="auto-stat-lbl">إيرادات 30 يوم</div></div></div>
+      </div>
+      <div class="auto-card" style="border:2px dashed var(--border);background:#fafafa;justify-content:center;align-items:center;display:flex;flex-direction:column;gap:8px;min-height:140px;cursor:pointer" onclick="showToast('فتح منشئ الأتمتة...')">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--wa-bg);display:flex;align-items:center;justify-content:center"><i class="ti ti-plus" style="color:var(--wa);font-size:18px"></i></div>
+        <div style="font-size:13px;font-weight:600;color:var(--text2)">إضافة أتمتة جديدة</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CHATBOT ===== -->
+  <div class="page" id="pg-chatbot">
+    <div class="page-header">
+      <div><div class="page-title">الشات بوت</div><div class="page-sub">منشئ تدفقات المحادثة بدون كود</div></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-secondary"><i class="ti ti-player-play"></i> اختبار البوت</button><button class="btn btn-primary" onclick="showToast('تم الحفظ!')"><i class="ti ti-device-floppy"></i> حفظ</button></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start">
+      <div class="card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px">مسار المحادثة</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px 14px;cursor:pointer" onclick="showToast('تعديل عقدة المشغّل')">
+            <div style="font-size:10px;color:#059669;font-weight:700;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:4px"><i class="ti ti-player-play"></i> مشغّل</div>
+            <div style="font-size:13px">أي رسالة واردة من العميل</div>
+          </div>
+          <div style="text-align:center;color:#9ca3af"><i class="ti ti-arrow-down"></i></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer" onclick="showToast('تعديل رسالة الترحيب')">
+            <div style="font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:4px"><i class="ti ti-message"></i> رسالة</div>
+            <div style="font-size:13px">👋 مرحباً {{الاسم}}! كيف يمكنني مساعدتك؟</div>
+          </div>
+          <div style="text-align:center;color:#9ca3af"><i class="ti ti-arrow-down"></i></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer" onclick="showToast('تعديل الردود السريعة')">
+            <div style="font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:4px"><i class="ti ti-list"></i> ردود سريعة</div>
+            <div style="font-size:13px">🛒 تتبع الطلب · 📦 الإرجاع · 💬 موظف · 🏷 العروض</div>
+          </div>
+          <div style="text-align:center;color:#9ca3af"><i class="ti ti-arrow-down"></i></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer" onclick="showToast('تعديل الشرط')">
+            <div style="font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:4px"><i class="ti ti-git-branch"></i> شرط</div>
+            <div style="font-size:13px">إذا كان الرد = "تتبع الطلب" → فرع استعلام الطلبات</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-secondary" style="flex:1;justify-content:center" onclick="showToast('تمت إضافة عقدة')"><i class="ti ti-plus"></i> إضافة عقدة</button>
+          <button class="btn btn-secondary" style="flex:1;justify-content:center" onclick="showToast('تمت إضافة فرع')"><i class="ti ti-git-branch"></i> إضافة فرع</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card card-sm">
+          <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--wa)">أداء البوت</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text2)">معالجة تلقائية</span><span style="color:#059669;font-weight:700">73%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text2)">تحويل للموظف</span><span style="color:var(--amber);font-weight:700">27%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text2)">متوسط وقت الرد</span><span style="font-weight:700">1د 42ث</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--text2)">تقييم الرضا</span><span style="color:#059669;font-weight:700">4.7 / 5.0</span></div>
+          </div>
+        </div>
+        <div class="card card-sm">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px">الردود التلقائية</div>
+          <div class="toggle-row" style="padding:8px 0"><div style="font-size:12px;font-weight:500">رد الغياب</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row" style="padding:8px 0"><div style="font-size:12px;font-weight:500">خارج أوقات العمل</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row" style="padding:8px 0;border:none"><div style="font-size:12px;font-weight:500">الرد بالذكاء الاصطناعي</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CONTACTS ===== -->
+  <div class="page" id="pg-contacts">
+    <div class="page-header">
+      <div><div class="page-title">جهات الاتصال</div><div class="page-sub">8,420 مشترك — إدارة وتقسيم جمهورك</div></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-secondary"><i class="ti ti-upload"></i> استيراد</button><button class="btn btn-primary" onclick="showToast('إضافة جهة اتصال')"><i class="ti ti-plus"></i> إضافة</button></div>
+    </div>
+    <div class="kpi-row" style="margin-bottom:20px">
+      <div class="kpi-card"><div class="kpi-label">إجمالي جهات الاتصال</div><div class="kpi-value">8,420</div><div class="kpi-sub up delta-up">+284 هذا الأسبوع</div></div>
+      <div class="kpi-card"><div class="kpi-label">المشتركون النشطون</div><div class="kpi-value green">7,614</div><div class="kpi-sub">90.4% نشطون</div></div>
+      <div class="kpi-card"><div class="kpi-label">العملاء VIP</div><div class="kpi-value" style="color:var(--amber)">342</div><div class="kpi-sub"><span class="kpi-delta delta-up">+12 هذا الشهر</span></div></div>
+    </div>
+    <div class="contacts-grid">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>الاسم</th><th>الجوال</th><th>التصنيف</th><th>الحالة</th><th></th></tr></thead>
+          <tbody>
+            <tr onclick="showContactDetail('سارة أحمد','SA','sara@email.com','+20 100 234 5678','VIP · مشترٍ متكرر','نشط')" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:8px"><div class="chat-av" style="width:30px;height:30px;font-size:10px">SA</div><span style="font-weight:600">سارة أحمد</span></div></td><td style="font-family:monospace">+20 100 234 5678</td><td><span class="kpi-badge" style="background:#f5f3ff;color:#7c3aed">VIP</span></td><td><span class="kpi-badge badge-green">نشط</span></td><td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showToast('إرسال رسالة')"><i class="ti ti-send"></i></button></td></tr>
+            <tr onclick="showContactDetail('محمد كريم','مك','m.karim@email.com','+20 111 345 6789','عميل جديد','نشط')" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:8px"><div class="chat-av" style="width:30px;height:30px;font-size:10px;background:#fce7f3;color:#be185d">مك</div><span style="font-weight:600">محمد كريم</span></div></td><td style="font-family:monospace">+20 111 345 6789</td><td><span class="kpi-badge badge-blue">جديد</span></td><td><span class="kpi-badge badge-green">نشط</span></td><td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showToast('إرسال رسالة')"><i class="ti ti-send"></i></button></td></tr>
+            <tr onclick="showContactDetail('ليلى نور','لن','layla@email.com','+20 122 456 7890','مخلص · مشترٍ متكرر','نشط')" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:8px"><div class="chat-av" style="width:30px;height:30px;font-size:10px;background:#f0fdf4;color:#166534">لن</div><span style="font-weight:600">ليلى نور</span></div></td><td style="font-family:monospace">+20 122 456 7890</td><td><span class="kpi-badge badge-amber">مخلص</span></td><td><span class="kpi-badge badge-green">نشط</span></td><td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showToast('إرسال رسالة')"><i class="ti ti-send"></i></button></td></tr>
+            <tr onclick="showContactDetail('عمرو رضوان','عر','amr@email.com','+20 100 567 8901','في خطر','نشط')" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:8px"><div class="chat-av" style="width:30px;height:30px;font-size:10px;background:#eff6ff;color:#1d4ed8">عر</div><span style="font-weight:600">عمرو رضوان</span></div></td><td style="font-family:monospace">+20 100 567 8901</td><td><span class="kpi-badge badge-red">في خطر</span></td><td><span class="kpi-badge badge-green">نشط</span></td><td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showToast('إرسال رسالة')"><i class="ti ti-send"></i></button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="contact-detail" id="cd-panel">
+        <div class="contact-detail-hd">
+          <div class="contact-av-lg" id="cd-av">SA</div>
+          <div><div style="font-size:15px;font-weight:700" id="cd-name">سارة أحمد</div><div style="font-size:11px;color:var(--text2);margin-top:2px" id="cd-tags">VIP · مشترٍ متكرر</div></div>
+        </div>
+        <div class="detail-row"><span class="detail-key">الإيميل</span><span class="detail-val" id="cd-email">sara@email.com</span></div>
+        <div class="detail-row"><span class="detail-key">الجوال</span><span class="detail-val" id="cd-phone">+20 100 234 5678</span></div>
+        <div class="detail-row"><span class="detail-key">الحالة</span><span class="kpi-badge badge-green" id="cd-status">نشط</span></div>
+        <div class="detail-row"><span class="detail-key">الطلبات</span><span class="detail-val">7 طلبات · SAR 340</span></div>
+        <div class="detail-row"><span class="detail-key">آخر شراء</span><span class="detail-val">28 مايو 2026</span></div>
+        <div style="padding:12px 16px;display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1;justify-content:center;font-size:12px" onclick="showToast('إرسال رسالة')"><i class="ti ti-send"></i> رسالة</button>
+          <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:12px" onclick="showToast('سجل المشتريات')"><i class="ti ti-history"></i> السجل</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== REPORTS ===== -->
+  <div class="page" id="pg-reports">
+    <div class="page-header">
+      <div><div class="page-title">التقارير</div><div class="page-sub">أداء شامل — آخر 30 يوماً</div></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-secondary"><i class="ti ti-calendar"></i> آخر 30 يوماً</button><button class="btn btn-secondary" onclick="showToast('جاري التصدير...')"><i class="ti ti-download"></i> تصدير</button></div>
+    </div>
+    <div class="report-stats">
+      <div class="kpi-card"><div class="kpi-label">إجمالي الرسائل</div><div class="kpi-value" style="color:#059669">312,480</div><div class="kpi-sub"><span class="kpi-delta delta-up"><i class="ti ti-trending-up" style="font-size:10px"></i> +23%</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">معدل القراءة</div><div class="kpi-value" style="color:var(--blue)">97.1%</div><div class="kpi-sub"><span class="kpi-delta delta-up">+1.4%</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">معدل النقر</div><div class="kpi-value" style="color:var(--amber)">28.4%</div><div class="kpi-sub"><span class="kpi-delta delta-up">+3.2%</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">إجمالي الإيرادات</div><div class="kpi-value" style="color:var(--purple)">SAR 395.8K</div><div class="kpi-sub"><span class="kpi-delta delta-up">+18%</span></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px">الرسائل اليومية</div>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:110px">
+          <div style="flex:1;border-radius:3px 3px 0 0;background:rgba(37,211,102,.2)" class="b" id="rb1"></div>
+          <div style="flex:1;border-radius:3px 3px 0 0;background:rgba(37,211,102,.2)" class="b" id="rb2"></div>
+          <div style="flex:1;border-radius:3px 3px 0 0;background:rgba(37,211,102,.2)" class="b" id="rb3"></div>
+          <div style="flex:1;border-radius:3px 3px 0 0;background:rgba(37,211,102,.2)" class="b" id="rb4"></div>
+          <div style="flex:1;border-radius:3px 3px 0 0;background:rgba(37,211,102,.2)" class="b" id="rb5"></div>
+          <div style="flex:1;border-radius:3px 3px 0 0;background:var(--wa)" class="b" id="rb6"></div>
+          <div style="flex:1;border-radius:3px 3px 0 0;background:rgba(37,211,102,.2)" class="b" id="rb7"></div>
+        </div>
+        <div style="display:flex;gap:4px;margin-top:5px">
+          <span style="flex:1;text-align:center;font-size:10px;color:var(--text2)">ن</span><span style="flex:1;text-align:center;font-size:10px;color:var(--text2)">ث</span><span style="flex:1;text-align:center;font-size:10px;color:var(--text2)">ر</span><span style="flex:1;text-align:center;font-size:10px;color:var(--text2)">خ</span><span style="flex:1;text-align:center;font-size:10px;color:var(--text2)">ج</span><span style="flex:1;text-align:center;font-size:10px;color:var(--text2)">س</span><span style="flex:1;text-align:center;font-size:10px;color:var(--text2)">ح</span>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px">الإيرادات حسب المصدر</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>استرداد السلات</span><span style="color:#059669;font-weight:700">SAR 18.2K · 42.6%</span></div><div style="height:6px;background:#f3f4f6;border-radius:3px"><div style="height:100%;width:42.6%;background:#10b981;border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>الحملات</span><span style="color:var(--blue);font-weight:700">SAR 14.1K · 32.9%</span></div><div style="height:6px;background:#f3f4f6;border-radius:3px"><div style="height:100%;width:32.9%;background:var(--blue);border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>البيع الإضافي</span><span style="color:var(--purple);font-weight:700">SAR 6.3K · 14.8%</span></div><div style="height:6px;background:#f3f4f6;border-radius:3px"><div style="height:100%;width:14.8%;background:var(--purple);border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>استرداد العملاء</span><span style="color:var(--amber);font-weight:700">SAR 4.1K · 9.7%</span></div><div style="height:6px;background:#f3f4f6;border-radius:3px"><div style="height:100%;width:9.7%;background:var(--amber);border-radius:3px"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div class="page" id="pg-settings">
+    <div class="page-header">
+      <div><div class="page-title">الإعدادات</div><div class="page-sub">إدارة حسابك والواتساب والفريق</div></div>
+      <button class="btn btn-primary" onclick="showToast('تم حفظ الإعدادات')"><i class="ti ti-device-floppy"></i> حفظ</button>
+    </div>
+    <div class="settings-nav">
+      <button class="s-tab active" onclick="setStab(this,'sg')">عام</button>
+      <button class="s-tab" onclick="setStab(this,'sw')">واتساب</button>
+      <button class="s-tab" onclick="setStab(this,'st')">الفريق</button>
+      <button class="s-tab" onclick="setStab(this,'sn')">الإشعارات</button>
+    </div>
+    <div id="sg" class="stab" style="max-width:600px">
+      <div class="card" style="margin-bottom:14px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px"><i class="ti ti-building-store" style="color:var(--wa)"></i> معلومات الشركة</div>
+        <div class="form-row"><div class="form-group"><label class="form-label">اسم الشركة</label><input class="form-input" value="شركة مدرار" type="text"></div><div class="form-group"><label class="form-label">المجال</label><select class="form-input" style="cursor:pointer"><option>تجارة إلكترونية</option><option>أزياء</option><option>خدمات</option></select></div></div>
+        <div class="form-group"><label class="form-label">الموقع الإلكتروني</label><input class="form-input" value="https://mudrar.sa" type="url"></div>
+        <div class="form-group"><label class="form-label">وصف النشاط</label><textarea class="form-input" rows="3" style="resize:vertical">متخصصون في قطع غيار السيارات بالمملكة العربية السعودية.</textarea></div>
+      </div>
+    </div>
+    <div id="sw" class="stab" style="display:none;max-width:600px">
+      <div class="card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px"><i class="ti ti-brand-whatsapp" style="color:var(--wa)"></i> إعدادات واتساب</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:10px"><div style="width:10px;height:10px;border-radius:50%;background:var(--wa)"></div><div><div style="font-size:13px;font-weight:600">966509559535</div><div style="font-size:11px;color:#059669">متصل ومفعّل</div></div></div>
+          <span class="kpi-badge badge-green">متصل</span>
+        </div>
+        <div class="form-group"><label class="form-label">الاسم المعروض</label><input class="form-input" value="شركة مدرار الرسمية" type="text"></div>
+        <div class="form-group"><label class="form-label">نص التعريف</label><input class="form-input" value="دعم العملاء والعروض الحصرية" type="text"></div>
+      </div>
+    </div>
+    <div id="st" class="stab" style="display:none;max-width:600px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-size:14px;font-weight:700">أعضاء الفريق</div><button class="btn btn-primary btn-sm" onclick="showToast('تم إرسال الدعوة')"><i class="ti ti-user-plus"></i> دعوة عضو</button></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>العضو</th><th>الدور</th><th>الحالة</th><th>إجراء</th></tr></thead>
+        <tbody>
+          <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="chat-av" style="width:30px;height:30px;font-size:10px">أح</div><span style="font-weight:600">أحمد حسن</span></div></td><td><span class="kpi-badge" style="background:#f5f3ff;color:#7c3aed">مدير</span></td><td><span class="kpi-badge badge-green">متصل</span></td><td><button class="btn btn-secondary btn-sm" onclick="showToast('تعديل الصلاحيات')">تعديل</button></td></tr>
+          <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="chat-av" style="width:30px;height:30px;font-size:10px;background:#fce7f3;color:#be185d">نم</div><span style="font-weight:600">ندى مصطفى</span></div></td><td><span class="kpi-badge badge-blue">وكيل</span></td><td><span class="kpi-badge badge-green">متصل</span></td><td><button class="btn btn-secondary btn-sm" onclick="showToast('تعديل الصلاحيات')">تعديل</button></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div id="sn" class="stab" style="display:none;max-width:600px">
+      <div class="card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px"><i class="ti ti-bell" style="color:var(--wa)"></i> إعدادات الإشعارات</div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500">رسالة واردة جديدة</div><div style="font-size:11px;color:var(--text2)">إشعار فوري للمحادثات الجديدة</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500">اكتمال تقرير الحملة</div><div style="font-size:11px;color:var(--text2)">إيميل عند انتهاء الحملة</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500">استرداد سلة</div><div style="font-size:11px;color:var(--text2)">تنبيه عند نجاح أتمتة السلة</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500">ملخص أسبوعي</div><div style="font-size:11px;color:var(--text2)">إيميل كل إثنين بملخص الأداء</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div id="toasts"></div>
+
+<script>
+// Navigation
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById('pg-' + id);
+  if (pg) pg.classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+// Time tabs (marketing revenue)
+const mktData = {
+  all:  { total:'395.8K', orders:'752',  avg:'526',  label:'منذ البدء',  barLabel:'SAR 395,800', pct:100 },
+  '12m':{ total:'280.4K', orders:'531',  avg:'528',  label:'12 شهرًا',   barLabel:'SAR 280,400', pct:71  },
+  '30d':{ total:'55.8K',  orders:'106',  avg:'526',  label:'30 يومًا',   barLabel:'SAR 55,800',  pct:14  },
+  '7d': { total:'14.2K',  orders:'27',   avg:'526',  label:'7 أيام',     barLabel:'SAR 14,200',  pct:4   },
+  '24h':{ total:'2.1K',   orders:'4',    avg:'525',  label:'24 ساعة',    barLabel:'SAR 2,100',   pct:1   }
+};
+function setTimeTab(el, key) {
+  el.closest('.time-tabs').querySelectorAll('.time-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const d = mktData[key];
+  document.getElementById('mkt-total').textContent = d.total;
+  document.getElementById('mkt-orders').textContent = d.orders;
+  document.getElementById('mkt-avg').textContent = d.avg;
+  document.getElementById('bar-period-lbl').textContent = d.label;
+  document.getElementById('bar-total-lbl').textContent = d.barLabel;
+  document.getElementById('main-bar').style.width = d.pct + '%';
+  document.getElementById('main-bar-lbl').textContent = d.total;
+}
+
+// Sub-tabs (generic)
+function setSubTab(el) {
+  el.closest('.time-tabs, .sub-tabs, .settings-nav').querySelectorAll('button').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Settings tabs
+function setStab(el, id) {
+  document.querySelectorAll('.stab').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.s-tab').forEach(t => t.classList.remove('active'));
+  const tgt = document.getElementById(id);
+  if (tgt) tgt.style.display = 'block';
+  el.classList.add('active');
+}
+
+// Inbox
+function pickChat(el, name, initials, preview) {
+  document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('ch-av').textContent = initials;
+  document.getElementById('ch-name').textContent = name;
+  const msgs = document.getElementById('ch-msgs');
+  msgs.innerHTML = `
+    <div style="text-align:center;font-size:11px;color:#6b7280;padding:5px 12px;background:rgba(255,255,255,.7);border-radius:20px;width:fit-content;margin:0 auto">اليوم</div>
+    <div class="msg msg-in">${preview}<div class="msg-time">الآن</div></div>
+  `;
+  const unread = el.querySelector('.chat-unread');
+  if (unread) unread.remove();
+}
+function insertQ(text) {
+  document.getElementById('ch-input').value = text;
+  document.getElementById('ch-input').focus();
+}
+function sendChatMsg() {
+  const inp = document.getElementById('ch-input');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  const msgs = document.getElementById('ch-msgs');
+  const d = document.createElement('div');
+  d.className = 'msg msg-out';
+  const t = new Date();
+  d.innerHTML = `${txt}<div class="msg-time">${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')} ✓✓</div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+  inp.value = '';
+  showToast('تم إرسال الرسالة');
+}
+
+// Contacts
+function showContactDetail(name, av, email, phone, tags, status) {
+  document.getElementById('cd-av').textContent = av;
+  document.getElementById('cd-name').textContent = name;
+  document.getElementById('cd-email').textContent = email;
+  document.getElementById('cd-phone').textContent = phone;
+  document.getElementById('cd-tags').textContent = tags;
+  const s = document.getElementById('cd-status');
+  s.textContent = status;
+  s.className = 'kpi-badge ' + (status === 'نشط' ? 'badge-green' : 'badge-amber');
+}
+
+// Toast
+function showToast(msg) {
+  const wrap = document.getElementById('toasts');
+  const d = document.createElement('div');
+  d.className = 'toast';
+  d.innerHTML = `<i class="ti ti-check-circle" style="color:var(--wa);font-size:16px"></i>${msg}`;
+  wrap.appendChild(d);
+  setTimeout(() => { d.style.opacity='0'; d.style.transform='translateX(-40px)'; d.style.transition='all .25s'; setTimeout(()=>d.remove(),260); }, 2400);
+}
+
+// Animate bars on load
+setTimeout(() => {
+  const heights = [42, 55, 48, 70, 62, 86, 74];
+  ['rb1','rb2','rb3','rb4','rb5','rb6','rb7'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el) el.style.height = heights[i] + '%';
+  });
+  document.querySelectorAll('.h-bar-row-fill').forEach(b => {
+    const w = b.style.width; b.style.width = '0';
+    setTimeout(() => b.style.width = w, 150);
+  });
+}, 200);
+
+setTimeout(() => showToast('مرحباً بك في لوحة التحكم'), 500);
+</script>
+</body>
+</html>
+
+<script>
+const API = {
+  base: '/api',
+  get token() { return localStorage.getItem('wg_token'); },
+  headers() { return { 'Content-Type':'application/json','Authorization':`Bearer ${this.token}` }; },
+  async get(path) {
+    const r = await fetch(this.base+path,{headers:this.headers()});
+    if(r.status===401){window.location='/login.html';return null;}
+    return r.json();
+  },
+  async post(path,body) { const r=await fetch(this.base+path,{method:'POST',headers:this.headers(),body:JSON.stringify(body)});return r.json(); },
+  async put(path,body) { const r=await fetch(this.base+path,{method:'PUT',headers:this.headers(),body:JSON.stringify(body)});return r.json(); },
+  async del(path) { const r=await fetch(this.base+path,{method:'DELETE',headers:this.headers()});return r.json(); }
+};
+
+async function loadDashboard() {
+  if(!API.token){window.location='/login.html';return;}
+  const kpis = await API.get('/dashboard/kpis');
+  if(!kpis) return;
+  const el=id=>document.getElementById(id);
+  if(el('mkt-total')) el('mkt-total').textContent = parseFloat(kpis.totalRevenue).toLocaleString();
+  if(el('mkt-orders')) el('mkt-orders').textContent = kpis.attributedOrders;
+  if(el('mkt-avg')) el('mkt-avg').textContent = kpis.avgOrderValue;
+  const autoData = await API.get('/dashboard/automations-revenue');
+  if(autoData && el('auto-revenue-tbody')) {
+    el('auto-revenue-tbody').innerHTML = autoData.map(a=>`<tr>
+      <td style="font-weight:600">${a.name}</td>
+      <td class="num-cell">${(a.revenue30d||0).toFixed(2)}</td>
+      <td style="color:var(--text2)">${(a.revenuePrev||0).toFixed(2)}</td>
+      <td class="num-cell" style="color:#059669">${(a.revenueAll||0).toFixed(2)}</td>
+      <td><span class="kpi-badge ${a.active?'badge-green':'badge-gray'}">${a.active?'نشط':'موقوف'}</span></td>
+      <td class="num-cell">${a.orders30d||0}</td></tr>`).join('');
+  }
+}
+
+async function loadContacts() {
+  const data = await API.get('/contacts?limit=20');
+  if(!data) return;
+  const tbody = document.querySelector('#pg-contacts .table-wrap tbody');
+  if(!tbody) return;
+  tbody.innerHTML = data.contacts.map(c=>`<tr onclick="showContactDetail('${c.name}','${c.name.slice(0,2)}','${c.email||''}','${c.phone}','${c.tag}','${c.status}')" style="cursor:pointer">
+    <td><div style="display:flex;align-items:center;gap:8px"><div class="chat-av" style="width:30px;height:30px;font-size:10px">${c.name.slice(0,2)}</div><span style="font-weight:600">${c.name}</span></div></td>
+    <td style="font-family:monospace">${c.phone}</td>
+    <td><span class="kpi-badge ${c.tag==='VIP'?'badge-purple':c.tag==='New'?'badge-blue':c.tag==='Loyal'?'badge-amber':c.tag==='At Risk'?'badge-red':'badge-gray'}">${c.tag}</span></td>
+    <td><span class="kpi-badge ${c.status==='active'?'badge-green':'badge-amber'}">${c.status==='active'?'نشط':'غير نشط'}</span></td>
+    <td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showToast('إرسال رسالة')"><i class="ti ti-send"></i></button></td></tr>`).join('');
+}
+
+async function loadCampaigns() {
+  const campaigns = await API.get('/campaigns');
+  if(!campaigns) return;
+  const tbody = document.querySelector('#pg-campaigns .table-wrap tbody');
+  if(!tbody) return;
+  tbody.innerHTML = campaigns.map(c=>`<tr>
+    <td style="font-weight:600">${c.name}</td>
+    <td><span class="kpi-badge ${c.status==='live'?'badge-green':c.status==='scheduled'?'badge-amber':'badge-gray'}">${c.status==='live'?'نشطة':c.status==='scheduled'?'مجدولة':'منتهية'}</span></td>
+    <td>${c.sent||'—'}</td><td style="color:#059669;font-weight:700">${c.openRate?c.openRate+'%':'—'}</td>
+    <td>${c.clicks||'—'}</td><td style="color:#059669;font-weight:700">${c.revenue?'SAR '+c.revenue.toLocaleString():'—'}</td>
+    <td><button class="btn btn-secondary btn-sm" onclick="showToast('تقرير')"><i class="ti ti-chart-bar"></i></button></td></tr>`).join('');
+}
+
+const _nav = window.nav;
+window.nav = function(id,el){
+  _nav(id,el);
+  if(id==='contacts') loadContacts();
+  if(id==='campaigns') loadCampaigns();
+};
+document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>

@@ -1,0 +1,25 @@
+{
+  "name": "wapigrow",
+  "version": "2.0.0",
+  "description": "WapiGrow — WhatsApp Marketing Platform",
+  "private": true,
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "NODE_ENV=development node backend/server.js",
+    "install:all": "npm install",
+    "seed": "node backend/db/seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "nedb-promises": "^6.2.1",
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

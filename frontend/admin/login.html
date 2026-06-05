@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WapiGrow — تسجيل الدخول</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--wa:#25D366;--wa2:#1aaa52}
+body{font-family:'Cairo',sans-serif;background:#f4f6f8;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:40px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
+.logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:32px}
+.logo-icon{width:44px;height:44px;background:var(--wa);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-icon i{color:#fff;font-size:22px}
+.logo-text{font-size:22px;font-weight:800;color:#1a1a2e}
+h2{font-size:18px;font-weight:700;color:#1a1a2e;text-align:center;margin-bottom:6px}
+.sub{font-size:13px;color:#6b7280;text-align:center;margin-bottom:28px}
+.form-group{margin-bottom:16px}
+label{font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:5px}
+input{width:100%;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:'Cairo',sans-serif;outline:none;transition:border-color .18s;color:#1a1a2e}
+input:focus{border-color:var(--wa)}
+.btn{width:100%;padding:12px;background:var(--wa);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;transition:background .18s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{background:var(--wa2)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.error{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+.hint{text-align:center;font-size:12px;color:#9ca3af;margin-top:20px}
+.hint span{color:var(--wa);font-weight:600}
+.divider{display:flex;align-items:center;gap:10px;margin:20px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
+.divider span{font-size:12px;color:#9ca3af}
+.admin-btn{width:100%;padding:10px;background:#f9fafb;color:#374151;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px}
+.admin-btn:hover{background:#f3f4f6;border-color:#d1d5db}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon"><i class="ti ti-brand-whatsapp"></i></div>
+    <div class="logo-text">WapiGrow</div>
+  </div>
+  <h2>مرحباً بعودتك 👋</h2>
+  <p class="sub">سجّل دخولك للوصول إلى لوحة التحكم</p>
+
+  <div class="error" id="err"></div>
+
+  <div class="form-group">
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="email" placeholder="admin@wapigrow.com" value="admin@wapigrow.com">
+  </div>
+  <div class="form-group">
+    <label>كلمة المرور</label>
+    <input type="password" id="password" placeholder="••••••••" value="admin123" onkeydown="if(event.key==='Enter')login()">
+  </div>
+  <button class="btn" id="loginBtn" onclick="login()">
+    <i class="ti ti-login"></i> تسجيل الدخول
+  </button>
+
+  <div class="divider"><span>أو</span></div>
+  <button class="admin-btn" onclick="goAdmin()">
+    <i class="ti ti-shield"></i> لوحة الإدارة
+  </button>
+
+  <p class="hint">تجريبي: <span>admin@wapigrow.com</span> / <span>admin123</span></p>
+</div>
+
+<script>
+// Redirect if already logged in
+if(localStorage.getItem('wg_token')) window.location = '/app';
+
+async function login() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('err');
+
+  err.style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> جاري الدخول...';
+
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'خطأ في تسجيل الدخول');
+    localStorage.setItem('wg_token', data.token);
+    localStorage.setItem('wg_user', JSON.stringify(data.user));
+    window.location = data.user.role === 'admin' ? '/' : '/';
+  } catch(e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-login"></i> تسجيل الدخول';
+  }
+}
+
+function goAdmin() {
+  window.location = '/admin/';
+}
+</script>
+</body>
+</html>

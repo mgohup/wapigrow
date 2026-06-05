@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WapiGrow Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --wa:#25D366;--wa2:#1aaa52;--wa-bg:rgba(37,211,102,0.08);
+  --bg:#f4f6f8;--white:#fff;--text:#1a1a2e;--text2:#6b7280;--text3:#9ca3af;
+  --border:#e5e7eb;--border2:#f0f2f5;
+  --red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#8b5cf6;
+  --sidebar:220px;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Cairo',sans-serif;color:var(--text);display:flex}
+
+/* SIDEBAR */
+#sb{width:var(--sidebar);min-width:var(--sidebar);height:100vh;background:var(--text);display:flex;flex-direction:column;flex-shrink:0}
+.sb-logo{padding:20px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo-icon{width:34px;height:34px;background:var(--wa);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.sb-logo-icon i{color:#fff;font-size:18px}
+.sb-logo-text{font-size:16px;font-weight:700;color:#fff}
+.sb-logo-badge{font-size:9px;font-weight:700;background:var(--red);color:#fff;padding:2px 6px;border-radius:10px;margin-right:4px}
+.sb-sec{padding:18px 16px 6px;font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1.2px;font-weight:600}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 8px;border-radius:8px;cursor:pointer;transition:all .18s;color:rgba(255,255,255,.55);font-size:13px}
+.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.sb-item.active{background:var(--wa-bg);color:var(--wa)}
+.sb-item i{font-size:17px}
+.sb-bottom{margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding:14px 10px}
+.sb-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .18s}
+.sb-user:hover{background:rgba(255,255,255,.06)}
+.sb-av{width:30px;height:30px;border-radius:50%;background:var(--wa);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-un{font-size:12px;font-weight:600;color:rgba(255,255,255,.8)}
+.sb-ur{font-size:10px;color:rgba(255,255,255,.35)}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{height:56px;min-height:56px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:14px}
+.tb-title{font-size:15px;font-weight:700;color:var(--text)}
+.tb-right{margin-right:auto;display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .18s;border:none}
+.btn-green{background:var(--wa);color:#fff}.btn-green:hover{background:var(--wa2)}
+.btn-secondary{background:var(--white);color:var(--text2);border:1px solid var(--border)}.btn-secondary:hover{background:#f9fafb}
+.btn-red{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}.btn-red:hover{background:rgba(239,68,68,.15)}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* PAGE */
+#page{flex:1;overflow-y:auto;padding:24px;background:var(--bg)}
+#page::-webkit-scrollbar{width:4px}
+#page::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
+.section{display:none;animation:fu .2s ease}
+.section.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS & TABLES */
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.pt{font-size:18px;font-weight:700}.ps{font-size:13px;color:var(--text2);margin-top:2px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px}
+.kpi-l{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.kpi-v{font-size:26px;font-weight:800;color:var(--text)}
+.kpi-s{font-size:11px;color:var(--text2);margin-top:5px}
+.tw{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--white)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:10px 14px;text-align:right;font-size:11px;font-weight:600;color:var(--text3);background:#f9fafb;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--border2);color:var(--text2);vertical-align:middle}
+tr:last-child td{border:none}
+tr:hover td{background:#fafafa}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.bg{background:rgba(37,211,102,.1);color:#059669}
+.ba{background:rgba(245,158,11,.1);color:var(--amber)}
+.br{background:rgba(239,68,68,.1);color:var(--red)}
+.bb{background:rgba(59,130,246,.1);color:var(--blue)}
+.bp{background:rgba(139,92,246,.1);color:var(--purple)}
+.bgr{background:#f3f4f6;color:var(--text3)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;display:none;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:var(--white);border-radius:14px;width:100%;max-width:480px;overflow:hidden;animation:mIn .22s ease}
+@keyframes mIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-hd{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:15px;font-weight:700}
+.modal-close{width:28px;height:28px;border-radius:6px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:16px}
+.modal-close:hover{background:#f3f4f6;color:var(--text)}
+.modal-body{padding:20px}
+.fg{margin-bottom:14px}
+.fl{font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;display:block}
+.fi{width:100%;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);font-family:'Cairo',sans-serif;outline:none;transition:border-color .18s}
+.fi:focus{border-color:var(--wa)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-ft{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-start;gap:8px}
+
+/* TOGGLE */
+.tgl{width:36px;height:20px;border-radius:10px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;border:none}
+.tgl.on{background:var(--wa)}.tgl.off{background:#e5e7eb}
+.tgl::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:3px;right:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tgl.on::after{transform:translateX(-16px)}
+
+/* TOAST */
+#toasts{position:fixed;bottom:20px;left:20px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+.toast{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);animation:tIn .22s ease}
+@keyframes tIn{from{transform:translateX(-30px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.search-bar{display:flex;gap:8px;margin-bottom:16px}
+.search-input{flex:1;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:8px 12px 8px 32px;font-size:13px;color:var(--text);font-family:'Cairo',sans-serif;outline:none}
+.search-input:focus{border-color:var(--wa)}
+.search-wrap{position:relative;flex:1}
+.search-wrap i{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sb">
+  <div class="sb-logo">
+    <div class="sb-logo-icon"><i class="ti ti-brand-whatsapp"></i></div>
+    <div>
+      <div class="sb-logo-text">WapiGrow</div>
+    </div>
+    <span class="sb-logo-badge">ADMIN</span>
+  </div>
+
+  <div class="sb-sec">الإدارة</div>
+  <div class="sb-item active" onclick="go('overview',this)"><i class="ti ti-dashboard"></i> نظرة عامة</div>
+  <div class="sb-item" onclick="go('users',this)"><i class="ti ti-users"></i> المستخدمون</div>
+  <div class="sb-item" onclick="go('contacts',this)"><i class="ti ti-address-book"></i> جهات الاتصال</div>
+  <div class="sb-item" onclick="go('campaigns',this)"><i class="ti ti-speakerphone"></i> الحملات</div>
+  <div class="sb-item" onclick="go('automations',this)"><i class="ti ti-bolt"></i> الأتمتة</div>
+
+  <div class="sb-sec">النظام</div>
+  <div class="sb-item" onclick="go('settings',this)"><i class="ti ti-settings"></i> الإعدادات</div>
+  <div class="sb-item" onclick="go('whatsapp',this)"><i class="ti ti-brand-whatsapp"></i> واتساب</div>
+
+  <div class="sb-bottom">
+    <div class="sb-user" onclick="logout()">
+      <div class="sb-av" id="sb-av">AH</div>
+      <div>
+        <div class="sb-un" id="sb-name">أحمد حسن</div>
+        <div class="sb-ur">تسجيل الخروج</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <div class="tb-title" id="topbar-title">نظرة عامة</div>
+    <div class="tb-right">
+      <a href="/" class="btn btn-secondary"><i class="ti ti-arrow-right"></i> لوحة التحكم</a>
+    </div>
+  </div>
+
+  <div id="page">
+
+    <!-- OVERVIEW -->
+    <div class="section active" id="sec-overview">
+      <div class="ph"><div><div class="pt">نظرة عامة على النظام</div><div class="ps">إحصائيات وأداء المنصة في الوقت الفعلي</div></div>
+        <button class="btn btn-secondary" onclick="loadOverview()"><i class="ti ti-refresh"></i> تحديث</button>
+      </div>
+      <div class="grid-4">
+        <div class="kpi"><div class="kpi-l">المستخدمون</div><div class="kpi-v" id="ov-users">—</div><div class="kpi-s">مسجلون في المنصة</div></div>
+        <div class="kpi"><div class="kpi-l">جهات الاتصال</div><div class="kpi-v" id="ov-contacts" style="color:var(--wa)">—</div><div class="kpi-s">إجمالي المشتركين</div></div>
+        <div class="kpi"><div class="kpi-l">الحملات</div><div class="kpi-v" id="ov-campaigns" style="color:var(--blue)">—</div><div class="kpi-s">إجمالي الحملات</div></div>
+        <div class="kpi"><div class="kpi-l">إجمالي الإيرادات</div><div class="kpi-v" id="ov-revenue" style="color:var(--amber)">—</div><div class="kpi-s">SAR منذ البدء</div></div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px">آخر المستخدمين المسجلين</div>
+        <div class="tw">
+          <table><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>تاريخ التسجيل</th></tr></thead>
+          <tbody id="ov-users-list"><tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px">جاري التحميل...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="section" id="sec-users">
+      <div class="ph">
+        <div><div class="pt">إدارة المستخدمين</div><div class="ps">أضف وعدّل وأدر أعضاء الفريق</div></div>
+        <button class="btn btn-green" onclick="openUserModal()"><i class="ti ti-user-plus"></i> إضافة مستخدم</button>
+      </div>
+      <div class="search-bar">
+        <div class="search-wrap">
+          <i class="ti ti-search"></i>
+          <input type="text" class="search-input" placeholder="بحث في المستخدمين..." oninput="filterUsers(this.value)">
+        </div>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>المستخدم</th><th>البريد الإلكتروني</th><th>الدور</th><th>تاريخ الإضافة</th><th>إجراءات</th></tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="section" id="sec-contacts">
+      <div class="ph">
+        <div><div class="pt">جهات الاتصال</div><div class="ps">إدارة قاعدة بيانات العملاء</div></div>
+        <button class="btn btn-green" onclick="openContactModal()"><i class="ti ti-plus"></i> إضافة جهة اتصال</button>
+      </div>
+      <div class="search-bar">
+        <div class="search-wrap">
+          <i class="ti ti-search"></i>
+          <input type="text" class="search-input" id="contacts-search" placeholder="بحث بالاسم أو الجوال..." oninput="searchContacts(this.value)">
+        </div>
+        <select class="fi" style="width:140px" onchange="filterContactTag(this.value)">
+          <option value="">كل التصنيفات</option>
+          <option>VIP</option><option>New</option><option>Loyal</option><option>At Risk</option><option>Inactive</option>
+        </select>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>الاسم</th><th>الجوال</th><th>البريد</th><th>التصنيف</th><th>الحالة</th><th>الطلبات</th><th>إجراءات</th></tr></thead>
+          <tbody id="contacts-tbody"><tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+      <div id="contacts-pagination" style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;font-size:13px;color:var(--text2)"></div>
+    </div>
+
+    <!-- CAMPAIGNS -->
+    <div class="section" id="sec-campaigns">
+      <div class="ph">
+        <div><div class="pt">الحملات التسويقية</div><div class="ps">إدارة وإرسال حملات واتساب</div></div>
+        <button class="btn btn-green" onclick="openCampaignModal()"><i class="ti ti-plus"></i> حملة جديدة</button>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>الحملة</th><th>الحالة</th><th>المُرسَل</th><th>معدل القراءة</th><th>الإيرادات</th><th>إجراءات</th></tr></thead>
+          <tbody id="campaigns-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AUTOMATIONS -->
+    <div class="section" id="sec-automations">
+      <div class="ph"><div><div class="pt">إدارة الأتمتة</div><div class="ps">تفعيل وإيقاف وتتبع الأتمتة التسويقية</div></div></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>الأتمتة</th><th>إيرادات 30 يوم</th><th>إيرادات منذ البدء</th><th>الطلبات</th><th>معدل التحويل</th><th>الحالة</th></tr></thead>
+          <tbody id="auto-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:20px">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="section" id="sec-settings">
+      <div class="ph"><div><div class="pt">إعدادات النظام</div><div class="ps">إدارة إعدادات الحساب والنظام</div></div>
+        <button class="btn btn-green" onclick="saveSettings()"><i class="ti ti-device-floppy"></i> حفظ الإعدادات</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:6px"><i class="ti ti-building-store" style="color:var(--wa)"></i> معلومات الشركة</div>
+          <div class="fg"><label class="fl">اسم الشركة</label><input type="text" class="fi" id="s-bizname" placeholder="اسم الشركة"></div>
+          <div class="fg"><label class="fl">الموقع الإلكتروني</label><input type="url" class="fi" id="s-website" placeholder="https://"></div>
+          <div class="fg"><label class="fl">العملة</label>
+            <select class="fi" id="s-currency"><option value="SAR">SAR — ريال سعودي</option><option value="USD">USD</option><option value="AED">AED</option><option value="EGP">EGP</option></select>
+          </div>
+          <div class="fg"><label class="fl">المنطقة الزمنية</label>
+            <select class="fi" id="s-timezone"><option value="Asia/Riyadh">Asia/Riyadh (GMT+3)</option><option value="Africa/Cairo">Africa/Cairo (GMT+2)</option><option value="UTC">UTC</option></select>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:6px"><i class="ti ti-key" style="color:var(--wa)"></i> إعدادات الأمان</div>
+          <div class="fg"><label class="fl">JWT Secret Key</label><input type="password" class="fi" id="s-jwt" placeholder="••••••••••••" value="wapigrow-secret-2026"></div>
+          <div style="padding:12px 0;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div><div style="font-size:13px;font-weight:500">مصادقة ثنائية</div><div style="font-size:11px;color:var(--text3)">تفعيل 2FA لجميع الأدمن</div></div>
+            <button class="tgl off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+          </div>
+          <div style="padding:12px 0;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:13px;font-weight:500">تسجيل الأنشطة</div><div style="font-size:11px;color:var(--text3)">حفظ سجل جميع الإجراءات</div></div>
+            <button class="tgl on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHATSAPP -->
+    <div class="section" id="sec-whatsapp">
+      <div class="ph"><div><div class="pt">إعدادات واتساب</div><div class="ps">إدارة أرقام الواتساب والاتصال</div></div></div>
+      <div class="card" id="wa-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;margin-bottom:18px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--wa)"></div>
+            <div><div style="font-size:14px;font-weight:600" id="wa-number">966509559535</div><div style="font-size:11px;color:#059669">متصل ومفعّل</div></div>
+          </div>
+          <span class="badge bg">متصل</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="fg"><label class="fl">الاسم المعروض</label><input type="text" class="fi" id="wa-dispname" value="WapiGrow Official"></div>
+          <div class="fg"><label class="fl">الدولة</label>
+            <select class="fi" id="wa-country"><option value="SA">🇸🇦 المملكة العربية السعودية</option><option value="AE">🇦🇪 الإمارات</option><option value="EG">🇪🇬 مصر</option></select>
+          </div>
+          <div class="fg"><label class="fl">تقييم الجودة</label>
+            <select class="fi" id="wa-quality"><option value="high">مرتفع ✅</option><option value="medium">متوسط ⚠️</option><option value="low">منخفض ❌</option></select>
+          </div>
+          <div class="fg"><label class="fl">الحد الأقصى للرسائل</label><input type="number" class="fi" id="wa-limit" value="100000"></div>
+        </div>
+        <button class="btn btn-green" style="margin-top:6px" onclick="saveWA()"><i class="ti ti-device-floppy"></i> حفظ</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title" id="um-title">إضافة مستخدم جديد</div><button class="modal-close" onclick="closeModal('user-modal')"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="um-id">
+      <div class="fr">
+        <div class="fg"><label class="fl">الاسم الكامل</label><input type="text" class="fi" id="um-name" placeholder="أحمد حسن"></div>
+        <div class="fg"><label class="fl">البريد الإلكتروني</label><input type="email" class="fi" id="um-email" placeholder="ahmed@email.com"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">كلمة المرور</label><input type="password" class="fi" id="um-pass" placeholder="••••••••"></div>
+        <div class="fg"><label class="fl">الدور</label><select class="fi" id="um-role"><option value="agent">وكيل دعم</option><option value="admin">مدير</option></select></div>
+      </div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-green" onclick="saveUser()"><i class="ti ti-check"></i> حفظ</button><button class="btn btn-secondary" onclick="closeModal('user-modal')">إلغاء</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="contact-modal">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">إضافة جهة اتصال</div><button class="modal-close" onclick="closeModal('contact-modal')"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="fr">
+        <div class="fg"><label class="fl">الاسم</label><input type="text" class="fi" id="cm-name" placeholder="الاسم الكامل"></div>
+        <div class="fg"><label class="fl">رقم الجوال</label><input type="text" class="fi" id="cm-phone" placeholder="+966..."></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">البريد الإلكتروني</label><input type="email" class="fi" id="cm-email" placeholder="email@example.com"></div>
+        <div class="fg"><label class="fl">التصنيف</label><select class="fi" id="cm-tag"><option>New</option><option>Loyal</option><option>VIP</option><option>At Risk</option></select></div>
+      </div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-green" onclick="saveContact()"><i class="ti ti-check"></i> حفظ</button><button class="btn btn-secondary" onclick="closeModal('contact-modal')">إلغاء</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="campaign-modal">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">إنشاء حملة جديدة</div><button class="modal-close" onclick="closeModal('campaign-modal')"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="fg"><label class="fl">اسم الحملة</label><input type="text" class="fi" id="capm-name" placeholder="مثال: حملة العيد 🎉"></div>
+      <div class="fg"><label class="fl">نص الرسالة</label><textarea class="fi" id="capm-msg" rows="4" placeholder="اكتب نص الرسالة هنا..." style="resize:vertical"></textarea></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">الجمهور المستهدف</label><select class="fi" id="capm-aud"><option value="all">كل المشتركين</option><option value="vip">VIP فقط</option><option value="active">النشطون</option></select></div>
+        <div class="fg"><label class="fl">جدولة الإرسال (اختياري)</label><input type="datetime-local" class="fi" id="capm-sched"></div>
+      </div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-green" onclick="saveCampaign()"><i class="ti ti-send"></i> إنشاء</button><button class="btn btn-secondary" onclick="closeModal('campaign-modal')">إلغاء</button></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+const API = {
+  base: '/api',
+  get token() { return localStorage.getItem('wg_token'); },
+  headers() { return {'Content-Type':'application/json','Authorization':`Bearer ${this.token}`}; },
+  async get(p) { const r=await fetch(this.base+p,{headers:this.headers()}); if(r.status===401){window.location='/login.html';return null;} return r.json(); },
+  async post(p,b) { const r=await fetch(this.base+p,{method:'POST',headers:this.headers(),body:JSON.stringify(b)});return r.json(); },
+  async put(p,b) { const r=await fetch(this.base+p,{method:'PUT',headers:this.headers(),body:JSON.stringify(b)});return r.json(); },
+  async del(p) { const r=await fetch(this.base+p,{method:'DELETE',headers:this.headers()});return r.json(); }
+};
+
+// Check auth + admin
+const user = JSON.parse(localStorage.getItem('wg_user')||'{}');
+if(!API.token){window.location='/login.html';}
+if(user.role!=='admin'){window.location='/';}
+document.getElementById('sb-av').textContent = user.avatar||'AH';
+document.getElementById('sb-name').textContent = user.name||'Admin';
+
+function logout(){ localStorage.removeItem('wg_token'); localStorage.removeItem('wg_user'); window.location='/login.html'; }
+
+// Navigation
+function go(id, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  const titles = {overview:'نظرة عامة',users:'المستخدمون',contacts:'جهات الاتصال',campaigns:'الحملات',automations:'الأتمتة',settings:'الإعدادات',whatsapp:'واتساب'};
+  document.getElementById('topbar-title').textContent = titles[id]||id;
+  if(id==='overview') loadOverview();
+  if(id==='users') loadUsers();
+  if(id==='contacts') loadAdminContacts();
+  if(id==='campaigns') loadAdminCampaigns();
+  if(id==='automations') loadAdminAutomations();
+  if(id==='settings') loadSettings();
+  if(id==='whatsapp') loadWA();
+}
+
+// OVERVIEW
+async function loadOverview() {
+  const data = await API.get('/admin/overview');
+  if(!data) return;
+  document.getElementById('ov-users').textContent = data.totalUsers;
+  document.getElementById('ov-contacts').textContent = data.totalContacts.toLocaleString();
+  document.getElementById('ov-campaigns').textContent = data.totalCampaigns;
+  document.getElementById('ov-revenue').textContent = 'SAR '+parseFloat(data.totalRevenue).toLocaleString();
+  document.getElementById('ov-users-list').innerHTML = (data.recentUsers||[]).map(u=>`
+    <tr><td style="color:var(--text);font-weight:600">${u.name}</td><td>${u.email}</td>
+    <td><span class="badge ${u.role==='admin'?'bp':'bb'}">${u.role==='admin'?'مدير':'وكيل'}</span></td>
+    <td style="font-size:12px;color:var(--text3)">${new Date(u.createdAt).toLocaleDateString('ar-SA')}</td></tr>`).join('');
+}
+
+// USERS
+let allUsers = [];
+async function loadUsers() {
+  const users = await API.get('/admin/users');
+  if(!users) return;
+  allUsers = users;
+  renderUsers(users);
+}
+function renderUsers(users) {
+  document.getElementById('users-tbody').innerHTML = users.map(u=>`
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:var(--wa-bg);border:1.5px solid rgba(37,211,102,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--wa)">${u.avatar||'?'}</div><div><div style="font-weight:600;color:var(--text)">${u.name}</div></div></div></td>
+      <td>${u.email}</td>
+      <td><span class="badge ${u.role==='admin'?'bp':'bb'}">${u.role==='admin'?'مدير':'وكيل'}</span></td>
+      <td style="font-size:12px;color:var(--text3)">${new Date(u.createdAt).toLocaleDateString('ar-SA')}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" onclick="editUser('${u._id}','${u.name}','${u.email}','${u.role}')"><i class="ti ti-edit"></i></button>
+        <button class="btn br btn-sm" onclick="deleteUser('${u._id}','${u.name}')"><i class="ti ti-trash"></i></button>
+      </div></td>
+    </tr>`).join('');
+}
+function filterUsers(q) { renderUsers(allUsers.filter(u=>u.name.toLowerCase().includes(q.toLowerCase())||u.email.toLowerCase().includes(q.toLowerCase()))); }
+
+function openUserModal(id='',name='',email='',role='agent') {
+  document.getElementById('um-id').value=id;
+  document.getElementById('um-name').value=name;
+  document.getElementById('um-email').value=email;
+  document.getElementById('um-role').value=role;
+  document.getElementById('um-pass').value='';
+  document.getElementById('um-title').textContent=id?'تعديل مستخدم':'إضافة مستخدم جديد';
+  document.getElementById('user-modal').classList.add('show');
+}
+function editUser(id,name,email,role){ openUserModal(id,name,email,role); }
+
+async function saveUser() {
+  const id=document.getElementById('um-id').value;
+  const body={name:document.getElementById('um-name').value,email:document.getElementById('um-email').value,role:document.getElementById('um-role').value,password:document.getElementById('um-pass').value};
+  if(!body.name||!body.email) return toast('الاسم والبريد مطلوبان','error');
+  if(!id&&!body.password) return toast('كلمة المرور مطلوبة للمستخدمين الجدد','error');
+  const res = id ? await API.put('/admin/users/'+id,body) : await API.post('/admin/users',body);
+  if(res.error) return toast(res.error,'error');
+  closeModal('user-modal'); loadUsers(); toast(id?'تم تحديث المستخدم':'تمت إضافة المستخدم');
+}
+async function deleteUser(id,name) {
+  if(!confirm(`حذف "${name}"؟`)) return;
+  const res = await API.del('/admin/users/'+id);
+  if(res.error) return toast(res.error,'error');
+  loadUsers(); toast('تم حذف المستخدم');
+}
+
+// CONTACTS
+let contactSkip=0, contactTotal=0, contactSearch='', contactTag='';
+async function loadAdminContacts(skip=0) {
+  contactSkip=skip;
+  let url=`/contacts?limit=15&skip=${skip}`;
+  if(contactSearch) url+=`&search=${encodeURIComponent(contactSearch)}`;
+  if(contactTag) url+=`&tag=${encodeURIComponent(contactTag)}`;
+  const data = await API.get(url);
+  if(!data) return;
+  contactTotal=data.total;
+  document.getElementById('contacts-tbody').innerHTML = data.contacts.map(c=>`
+    <tr>
+      <td style="font-weight:600;color:var(--text)">${c.name}</td>
+      <td style="font-family:monospace;font-size:12px">${c.phone}</td>
+      <td style="font-size:12px">${c.email||'—'}</td>
+      <td><span class="badge ${c.tag==='VIP'?'bp':c.tag==='New'?'bb':c.tag==='Loyal'?'ba':c.tag==='At Risk'?'br':'bgr'}">${c.tag}</span></td>
+      <td><span class="badge ${c.status==='active'?'bg':'ba'}">${c.status==='active'?'نشط':'غير نشط'}</span></td>
+      <td>${c.orders||0}</td>
+      <td><div style="display:flex;gap:5px">
+        <button class="btn btn-secondary btn-sm" onclick="toast('إرسال رسالة...')"><i class="ti ti-send"></i></button>
+        <button class="btn br btn-sm" onclick="deleteContact('${c._id}')"><i class="ti ti-trash"></i></button>
+      </div></td>
+    </tr>`).join('');
+  const pages = Math.ceil(contactTotal/15);
+  const curPage = Math.floor(skip/15)+1;
+  document.getElementById('contacts-pagination').innerHTML = `
+    <span>عرض ${skip+1}–${Math.min(skip+15,contactTotal)} من ${contactTotal}</span>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-secondary btn-sm" ${skip===0?'disabled':''} onclick="loadAdminContacts(${skip-15})"><i class="ti ti-chevron-right"></i></button>
+      <span style="padding:5px 10px;background:#f9fafb;border-radius:6px;border:1px solid var(--border)">${curPage}/${pages}</span>
+      <button class="btn btn-secondary btn-sm" ${curPage>=pages?'disabled':''} onclick="loadAdminContacts(${skip+15})"><i class="ti ti-chevron-left"></i></button>
+    </div>`;
+}
+function searchContacts(v){ contactSearch=v; loadAdminContacts(0); }
+function filterContactTag(v){ contactTag=v; loadAdminContacts(0); }
+
+function openContactModal(){ document.getElementById('contact-modal').classList.add('show'); }
+async function saveContact() {
+  const body={name:document.getElementById('cm-name').value,phone:document.getElementById('cm-phone').value,email:document.getElementById('cm-email').value,tag:document.getElementById('cm-tag').value};
+  if(!body.name||!body.phone) return toast('الاسم والجوال مطلوبان','error');
+  const res = await API.post('/contacts',body);
+  if(res.error) return toast(res.error,'error');
+  closeModal('contact-modal'); loadAdminContacts(0); toast('تمت إضافة جهة الاتصال');
+}
+async function deleteContact(id){
+  if(!confirm('حذف هذه الجهة؟')) return;
+  await API.del('/contacts/'+id); loadAdminContacts(contactSkip); toast('تم الحذف');
+}
+
+// CAMPAIGNS
+async function loadAdminCampaigns() {
+  const camps = await API.get('/campaigns');
+  if(!camps) return;
+  document.getElementById('campaigns-tbody').innerHTML = camps.map(c=>`
+    <tr>
+      <td style="font-weight:600;color:var(--text)">${c.name}</td>
+      <td><span class="badge ${c.status==='live'?'bg':c.status==='scheduled'?'ba':'bgr'}">${c.status==='live'?'نشطة':c.status==='scheduled'?'مجدولة':c.status==='draft'?'مسودة':'منتهية'}</span></td>
+      <td>${(c.sent||0).toLocaleString()}</td>
+      <td style="color:#059669;font-weight:700">${c.openRate?c.openRate+'%':'—'}</td>
+      <td style="color:#059669;font-weight:700">${c.revenue?'SAR '+c.revenue.toLocaleString():'—'}</td>
+      <td><div style="display:flex;gap:5px">
+        ${c.status==='draft'||c.status==='scheduled'?`<button class="btn btn-green btn-sm" onclick="sendCampaign('${c._id}')"><i class="ti ti-send"></i> إرسال</button>`:''}
+        <button class="btn br btn-sm" onclick="deleteCampaign('${c._id}')"><i class="ti ti-trash"></i></button>
+      </div></td>
+    </tr>`).join('');
+}
+function openCampaignModal(){ document.getElementById('campaign-modal').classList.add('show'); }
+async function saveCampaign(){
+  const body={name:document.getElementById('capm-name').value,message:document.getElementById('capm-msg').value,audience:document.getElementById('capm-aud').value,scheduledAt:document.getElementById('capm-sched').value||null};
+  if(!body.name||!body.message) return toast('الاسم والرسالة مطلوبان','error');
+  const res = await API.post('/campaigns',body);
+  if(res.error) return toast(res.error,'error');
+  closeModal('campaign-modal'); loadAdminCampaigns(); toast('تم إنشاء الحملة');
+}
+async function sendCampaign(id){
+  if(!confirm('إرسال الحملة الآن؟')) return;
+  const res = await API.post('/campaigns/'+id+'/send',{});
+  if(res.error) return toast(res.error,'error');
+  loadAdminCampaigns(); toast('تم إرسال الحملة بنجاح! 🎉');
+}
+async function deleteCampaign(id){
+  if(!confirm('حذف هذه الحملة؟')) return;
+  await API.del('/campaigns/'+id); loadAdminCampaigns(); toast('تم الحذف');
+}
+
+// AUTOMATIONS
+async function loadAdminAutomations() {
+  const autos = await API.get('/automations');
+  if(!autos) return;
+  document.getElementById('auto-tbody').innerHTML = autos.map(a=>`
+    <tr>
+      <td style="font-weight:600;color:var(--text)">${a.name}</td>
+      <td style="font-weight:700">SAR ${(a.revenue30d||0).toFixed(2)}</td>
+      <td style="color:#059669;font-weight:700">SAR ${(a.revenueAll||0).toFixed(2)}</td>
+      <td>${a.orders30d||0}</td>
+      <td>${a.convRate||0}%</td>
+      <td><button class="tgl ${a.active?'on':'off'}" onclick="toggleAuto('${a._id}',this)"></button></td>
+    </tr>`).join('');
+}
+async function toggleAuto(id, btn) {
+  const res = await API.put('/automations/'+id+'/toggle',{});
+  btn.className='tgl '+(res.active?'on':'off');
+  toast(res.active?'تم تفعيل الأتمتة':'تم إيقاف الأتمتة');
+}
+
+// SETTINGS
+async function loadSettings() {
+  const s = await API.get('/admin/settings');
+  if(!s) return;
+  const g = s.general||{};
+  if(g.businessName) document.getElementById('s-bizname').value=g.businessName;
+  if(g.website) document.getElementById('s-website').value=g.website;
+  if(g.currency) document.getElementById('s-currency').value=g.currency;
+  if(g.timezone) document.getElementById('s-timezone').value=g.timezone;
+}
+async function saveSettings() {
+  const body={businessName:document.getElementById('s-bizname').value,website:document.getElementById('s-website').value,currency:document.getElementById('s-currency').value,timezone:document.getElementById('s-timezone').value};
+  const res = await API.put('/admin/settings/general',body);
+  if(res.error) return toast(res.error,'error');
+  toast('تم حفظ الإعدادات ✅');
+}
+
+// WHATSAPP
+async function loadWA() {
+  const s = await API.get('/admin/settings');
+  if(!s) return;
+  const w = s.whatsapp||{};
+  if(w.number) document.getElementById('wa-number').textContent=w.number;
+  if(w.displayName) document.getElementById('wa-dispname').value=w.displayName;
+  if(w.qualityRating) document.getElementById('wa-quality').value=w.qualityRating;
+  if(w.messageLimit) document.getElementById('wa-limit').value=w.messageLimit;
+  if(w.country) document.getElementById('wa-country').value=w.country;
+}
+async function saveWA() {
+  const body={displayName:document.getElementById('wa-dispname').value,qualityRating:document.getElementById('wa-quality').value,messageLimit:+document.getElementById('wa-limit').value,country:document.getElementById('wa-country').value};
+  const res = await API.put('/admin/settings/whatsapp',body);
+  if(res.error) return toast(res.error,'error');
+  toast('تم حفظ إعدادات واتساب ✅');
+}
+
+// MODAL helpers
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); }));
+
+// TOAST
+function toast(msg, type='success') {
+  const wrap=document.getElementById('toasts');
+  const d=document.createElement('div');
+  d.className='toast';
+  d.innerHTML=`<i class="ti ${type==='error'?'ti-circle-x':'ti-check-circle'}" style="color:${type==='error'?'var(--red)':'var(--wa)'}"></i>${msg}`;
+  wrap.appendChild(d);
+  setTimeout(()=>{ d.style.opacity='0'; d.style.transition='all .25s'; setTimeout(()=>d.remove(),260); },2600);
+}
+
+// Init
+loadOverview();
+</script>
+</body>
+</html>

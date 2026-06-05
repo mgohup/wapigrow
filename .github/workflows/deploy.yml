@@ -1,0 +1,39 @@
+name: Deploy to Google Cloud
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Deploy to GCE via SSH
+        uses: google-github-actions/ssh-compute@v1
+        with:
+          instance_name: ${{ secrets.GCE_INSTANCE_NAME }}
+          zone: ${{ secrets.GCE_ZONE }}
+          ssh_private_key: ${{ secrets.GCE_SSH_KEY }}
+          command: |
+            cd /opt/wapigrow
+            git pull origin main
+            npm ci --omit=dev
+            pm2 restart wapigrow || pm2 start backend/server.js --name wapigrow
+            pm2 save
