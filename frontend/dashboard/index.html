@@ -1028,75 +1028,251 @@ setTimeout(() => {
 
 setTimeout(() => showToast('مرحباً بك في لوحة التحكم'), 500);
 </script>
-</body>
-</html>
 
 <script>
+// ═══════════════════════════════════════════════════
+//  API CLIENT
+// ═══════════════════════════════════════════════════
 const API = {
   base: '/api',
   get token() { return localStorage.getItem('wg_token'); },
   headers() { return { 'Content-Type':'application/json','Authorization':`Bearer ${this.token}` }; },
   async get(path) {
-    const r = await fetch(this.base+path,{headers:this.headers()});
-    if(r.status===401){window.location='/login.html';return null;}
-    return r.json();
+    try {
+      const r = await fetch(this.base+path,{headers:this.headers()});
+      if(r.status===401){logout();return null;}
+      return r.json();
+    } catch(e){showToast('خطأ في الاتصال');return null;}
   },
-  async post(path,body) { const r=await fetch(this.base+path,{method:'POST',headers:this.headers(),body:JSON.stringify(body)});return r.json(); },
-  async put(path,body) { const r=await fetch(this.base+path,{method:'PUT',headers:this.headers(),body:JSON.stringify(body)});return r.json(); },
-  async del(path) { const r=await fetch(this.base+path,{method:'DELETE',headers:this.headers()});return r.json(); }
+  async post(path,body) {
+    try{const r=await fetch(this.base+path,{method:'POST',headers:this.headers(),body:JSON.stringify(body)});return r.json();}
+    catch(e){showToast('خطأ في الاتصال');return null;}
+  },
+  async put(path,body) {
+    try{const r=await fetch(this.base+path,{method:'PUT',headers:this.headers(),body:JSON.stringify(body)});return r.json();}
+    catch(e){return null;}
+  },
+  async del(path) {
+    try{const r=await fetch(this.base+path,{method:'DELETE',headers:this.headers()});return r.json();}
+    catch(e){return null;}
+  }
 };
 
-async function loadDashboard() {
-  if(!API.token){window.location='/login.html';return;}
-  const kpis = await API.get('/dashboard/kpis');
+function logout(){
+  localStorage.removeItem('wg_token');
+  localStorage.removeItem('wg_user');
+  window.location='/admin/login.html';
+}
+
+function checkAuth(){
+  if(!API.token){logout();return false;}
+  try{
+    const user=JSON.parse(localStorage.getItem('wg_user')||'{}');
+    const av=document.getElementById('sb-avatar');
+    if(av&&user.avatar) av.textContent=user.avatar;
+  }catch(e){}
+  return true;
+}
+
+// ═══════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════
+async function loadDashboard(){
+  if(!checkAuth()) return;
+  const kpis=await API.get('/dashboard/kpis');
   if(!kpis) return;
   const el=id=>document.getElementById(id);
-  if(el('mkt-total')) el('mkt-total').textContent = parseFloat(kpis.totalRevenue).toLocaleString();
-  if(el('mkt-orders')) el('mkt-orders').textContent = kpis.attributedOrders;
-  if(el('mkt-avg')) el('mkt-avg').textContent = kpis.avgOrderValue;
-  const autoData = await API.get('/dashboard/automations-revenue');
-  if(autoData && el('auto-revenue-tbody')) {
-    el('auto-revenue-tbody').innerHTML = autoData.map(a=>`<tr>
-      <td style="font-weight:600">${a.name}</td>
-      <td class="num-cell">${(a.revenue30d||0).toFixed(2)}</td>
-      <td style="color:var(--text2)">${(a.revenuePrev||0).toFixed(2)}</td>
-      <td class="num-cell" style="color:#059669">${(a.revenueAll||0).toFixed(2)}</td>
-      <td><span class="kpi-badge ${a.active?'badge-green':'badge-gray'}">${a.active?'نشط':'موقوف'}</span></td>
-      <td class="num-cell">${a.orders30d||0}</td></tr>`).join('');
+  if(el('kpi-contacts'))  el('kpi-contacts').textContent=(kpis.contacts||0).toLocaleString();
+  if(el('kpi-campaigns')) el('kpi-campaigns').textContent=(kpis.campaigns||0).toLocaleString();
+  if(el('kpi-revenue'))   el('kpi-revenue').textContent='SAR '+parseFloat(kpis.totalRevenue||0).toLocaleString();
+  if(el('kpi-orders'))    el('kpi-orders').textContent=(kpis.attributedOrders||0).toLocaleString();
+  if(el('kpi-openrate'))  el('kpi-openrate').textContent=(kpis.openRate||97)+'%';
+  if(el('mkt-total'))     el('mkt-total').textContent=parseFloat(kpis.totalRevenue||0).toLocaleString();
+  if(el('mkt-orders'))    el('mkt-orders').textContent=kpis.attributedOrders||0;
+  if(el('mkt-avg'))       el('mkt-avg').textContent=kpis.avgOrderValue||0;
+
+  const autoData=await API.get('/dashboard/automations-revenue');
+  if(autoData&&el('auto-revenue-tbody')){
+    el('auto-revenue-tbody').innerHTML=autoData.map(a=>`
+      <tr>
+        <td style="font-weight:600">${a.name}</td>
+        <td class="num-cell">SAR ${(a.revenue30d||0).toFixed(2)}</td>
+        <td style="color:var(--text2)">SAR ${(a.revenuePrev||0).toFixed(2)}</td>
+        <td class="num-cell" style="color:#059669">SAR ${(a.revenueAll||0).toFixed(2)}</td>
+        <td><span class="kpi-badge ${a.active?'badge-green':'badge-gray'}">${a.active?'نشط':'موقوف'}</span></td>
+        <td class="num-cell">${a.orders30d||0}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="toggleAutomation('${a._id}',${a.active},this)">
+          <i class="ti ti-${a.active?'pause':'play'}"></i></button></td>
+      </tr>`).join('');
   }
 }
 
-async function loadContacts() {
-  const data = await API.get('/contacts?limit=20');
+// ═══════════════════════════════════════════════════
+//  CONTACTS
+// ═══════════════════════════════════════════════════
+let cPage=0;
+function tagBadge(t){
+  return t==='VIP'?'badge-purple':t==='New'?'badge-blue':t==='Loyal'?'badge-amber':t==='At Risk'?'badge-red':'badge-gray';
+}
+function esc(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
+
+async function loadContacts(search=''){
+  const params=new URLSearchParams({limit:20,skip:cPage*20});
+  if(search) params.set('search',search);
+  const data=await API.get('/contacts?'+params);
   if(!data) return;
-  const tbody = document.querySelector('#pg-contacts .table-wrap tbody');
+  const tbody=document.querySelector('#pg-contacts .table-wrap tbody');
   if(!tbody) return;
-  tbody.innerHTML = data.contacts.map(c=>`<tr onclick="showContactDetail('${c.name}','${c.name.slice(0,2)}','${c.email||''}','${c.phone}','${c.tag}','${c.status}')" style="cursor:pointer">
-    <td><div style="display:flex;align-items:center;gap:8px"><div class="chat-av" style="width:30px;height:30px;font-size:10px">${c.name.slice(0,2)}</div><span style="font-weight:600">${c.name}</span></div></td>
-    <td style="font-family:monospace">${c.phone}</td>
-    <td><span class="kpi-badge ${c.tag==='VIP'?'badge-purple':c.tag==='New'?'badge-blue':c.tag==='Loyal'?'badge-amber':c.tag==='At Risk'?'badge-red':'badge-gray'}">${c.tag}</span></td>
-    <td><span class="kpi-badge ${c.status==='active'?'badge-green':'badge-amber'}">${c.status==='active'?'نشط':'غير نشط'}</span></td>
-    <td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showToast('إرسال رسالة')"><i class="ti ti-send"></i></button></td></tr>`).join('');
+  if(!data.contacts||!data.contacts.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text2)">لا توجد جهات اتصال</td></tr>';
+    return;
+  }
+  tbody.innerHTML=data.contacts.map(c=>`
+    <tr onclick="showContactDetail('${esc(c.name)}','${c.name.slice(0,2)}','${esc(c.email||'')}','${esc(c.phone||'')}','${esc(c.tag||'')}','${c.status}','${c._id}')" style="cursor:pointer">
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="chat-av" style="width:32px;height:32px;font-size:11px;flex-shrink:0">${c.name.slice(0,2)}</div>
+        <div><div style="font-weight:600">${c.name}</div><div style="font-size:11px;color:var(--text2)">${c.email||''}</div></div>
+      </div></td>
+      <td style="font-family:monospace;font-size:12px">${c.phone||'—'}</td>
+      <td><span class="kpi-badge ${tagBadge(c.tag)}">${c.tag||'—'}</span></td>
+      <td><span class="kpi-badge ${c.status==='active'?'badge-green':'badge-amber'}">${c.status==='active'?'نشط':'غير نشط'}</span></td>
+      <td><div style="display:flex;gap:5px">
+        <button class="btn btn-secondary btn-sm" title="رسالة" onclick="event.stopPropagation();showToast('إرسال رسالة إلى ${esc(c.name)}')"><i class="ti ti-send"></i></button>
+        <button class="btn btn-secondary btn-sm" title="حذف" onclick="event.stopPropagation();deleteContact('${c._id}','${esc(c.name)}')"><i class="ti ti-trash" style="color:var(--red)"></i></button>
+      </div></td>
+    </tr>`).join('');
+  const cnt=document.getElementById('contacts-count');
+  if(cnt) cnt.textContent=data.total+' جهة اتصال';
 }
 
-async function loadCampaigns() {
-  const campaigns = await API.get('/campaigns');
-  if(!campaigns) return;
-  const tbody = document.querySelector('#pg-campaigns .table-wrap tbody');
-  if(!tbody) return;
-  tbody.innerHTML = campaigns.map(c=>`<tr>
-    <td style="font-weight:600">${c.name}</td>
-    <td><span class="kpi-badge ${c.status==='live'?'badge-green':c.status==='scheduled'?'badge-amber':'badge-gray'}">${c.status==='live'?'نشطة':c.status==='scheduled'?'مجدولة':'منتهية'}</span></td>
-    <td>${c.sent||'—'}</td><td style="color:#059669;font-weight:700">${c.openRate?c.openRate+'%':'—'}</td>
-    <td>${c.clicks||'—'}</td><td style="color:#059669;font-weight:700">${c.revenue?'SAR '+c.revenue.toLocaleString():'—'}</td>
-    <td><button class="btn btn-secondary btn-sm" onclick="showToast('تقرير')"><i class="ti ti-chart-bar"></i></button></td></tr>`).join('');
+function showContactDetail(name,av,email,phone,tag,status,id){
+  const el=id2=>document.getElementById(id2);
+  if(el('cd-av'))    el('cd-av').textContent=av;
+  if(el('cd-name'))  el('cd-name').textContent=name;
+  if(el('cd-email')) el('cd-email').textContent=email||'—';
+  if(el('cd-phone')) el('cd-phone').textContent=phone||'—';
+  if(el('cd-tags'))  el('cd-tags').textContent=tag||'—';
+  if(el('cd-status')){
+    el('cd-status').textContent=status==='active'?'نشط':'غير نشط';
+    el('cd-status').className='kpi-badge '+(status==='active'?'badge-green':'badge-amber');
+  }
 }
 
-const _nav = window.nav;
-window.nav = function(id,el){
-  _nav(id,el);
-  if(id==='contacts') loadContacts();
-  if(id==='campaigns') loadCampaigns();
+async function deleteContact(id,name){
+  if(!confirm('حذف '+name+'؟')) return;
+  const r=await API.del('/contacts/'+id);
+  if(r&&!r.error){showToast('تم الحذف');loadContacts();}
+  else showToast('فشل الحذف');
+}
+
+// ═══════════════════════════════════════════════════
+//  CAMPAIGNS
+// ═══════════════════════════════════════════════════
+async function loadCampaigns(){
+  const camps=await API.get('/campaigns');
+  if(!camps) return;
+  const tbody=document.querySelector('#pg-campaigns .table-wrap tbody');
+  if(!tbody) return;
+  if(!camps.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text2)">لا توجد حملات بعد</td></tr>';
+    return;
+  }
+  tbody.innerHTML=camps.map(c=>`
+    <tr>
+      <td style="font-weight:600">${c.name}</td>
+      <td><span class="kpi-badge ${c.status==='live'?'badge-green':c.status==='scheduled'?'badge-amber':'badge-gray'}">${c.status==='live'?'نشطة':c.status==='scheduled'?'مجدولة':'منتهية'}</span></td>
+      <td>${(c.sent||0).toLocaleString()}</td>
+      <td style="color:#059669;font-weight:700">${c.openRate?c.openRate+'%':'—'}</td>
+      <td>${c.clicks||'—'}</td>
+      <td style="color:#059669;font-weight:700">${c.revenue?'SAR '+c.revenue.toLocaleString():'—'}</td>
+      <td><div style="display:flex;gap:5px">
+        <button class="btn btn-secondary btn-sm" title="إرسال" onclick="sendCampaignNow('${c._id}','${esc(c.name)}')"><i class="ti ti-send"></i></button>
+        <button class="btn btn-secondary btn-sm" title="تقرير" onclick="showToast('تقرير: ${esc(c.name)}')"><i class="ti ti-chart-bar"></i></button>
+      </div></td>
+    </tr>`).join('');
+}
+
+async function sendCampaignNow(id,name){
+  if(!confirm('إرسال حملة "'+name+'" الآن؟')) return;
+  const r=await API.post('/campaigns/'+id+'/send',{});
+  showToast(r&&!r.error?'تم إرسال الحملة ✓':'فشل الإرسال');
+  loadCampaigns();
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTOMATIONS
+// ═══════════════════════════════════════════════════
+async function loadAutomations(){
+  const autos=await API.get('/automations');
+  if(!autos) return;
+  const container=document.querySelector('#pg-automations .automations-list');
+  if(!container) return;
+  container.innerHTML=autos.map(a=>`
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--wa-bg);display:flex;align-items:center;justify-content:center">
+            <i class="ti ti-${a.icon||'bolt'}" style="font-size:20px;color:var(--wa)"></i>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:14px">${a.name}</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">${a.description||''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="text-align:center">
+            <div style="font-size:18px;font-weight:800;color:var(--wa)">${(a.sent||0).toLocaleString()}</div>
+            <div style="font-size:10px;color:var(--text2)">مرسلة</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:18px;font-weight:800;color:#059669">SAR ${(a.revenue||0).toLocaleString()}</div>
+            <div style="font-size:10px;color:var(--text2)">إيراد</div>
+          </div>
+          <div>
+            <label style="position:relative;display:inline-block;width:42px;height:24px;cursor:pointer">
+              <input type="checkbox" ${a.active?'checked':''} onchange="toggleAutomation('${a._id}',${a.active},this)"
+                style="opacity:0;width:0;height:0;position:absolute">
+              <span style="position:absolute;inset:0;border-radius:24px;background:${a.active?'var(--wa)':'#d1d5db'};transition:background .2s"></span>
+              <span style="position:absolute;top:3px;${a.active?'right:3px':'left:3px'};width:18px;height:18px;border-radius:50%;background:#fff;transition:all .2s"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function toggleAutomation(id,currentActive,el){
+  const r=await API.put('/automations/'+id+'/toggle',{});
+  if(r&&!r.error){
+    showToast(r.active?'تم تفعيل الأتمتة ✓':'تم إيقاف الأتمتة');
+    loadAutomations();
+    loadDashboard();
+  } else {
+    showToast('فشل تغيير الحالة');
+    if(el&&el.type==='checkbox') el.checked=currentActive;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  NAV OVERRIDE
+// ═══════════════════════════════════════════════════
+const _navOrig=window.nav;
+window.nav=function(id,el){
+  _navOrig(id,el);
+  if(id==='contacts')    loadContacts();
+  if(id==='campaigns')   loadCampaigns();
+  if(id==='automations') loadAutomations();
 };
-document.addEventListener('DOMContentLoaded', loadDashboard);
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  if(!checkAuth()) return;
+  loadDashboard();
+  const si=document.getElementById('contact-search');
+  if(si){let d;si.addEventListener('input',()=>{clearTimeout(d);d=setTimeout(()=>loadContacts(si.value),350);});}
+});
 </script>
+</body>
+</html>

@@ -89,7 +89,7 @@ async function login() {
     if (!r.ok) throw new Error(data.error || 'خطأ في تسجيل الدخول');
     localStorage.setItem('wg_token', data.token);
     localStorage.setItem('wg_user', JSON.stringify(data.user));
-    window.location = data.user.role === 'admin' ? '/' : '/';
+    window.location = '/app';
   } catch(e) {
     err.textContent = e.message;
     err.style.display = 'block';
